@@ -19,3 +19,8 @@ DONE
 - Add whitelist (http://www.webdnstools.com/articles/squid-proxy-whitelist)
 http://www.switchroot.com/how-to-configure-squid-proxy-server-centos-fedora-or-rhel
 - Mysql DB preparation for authentication: http://wiki.squid-cache.org/ConfigExamples/Authenticate/Mysql
+- Testing the proxy with Basic authentication: https://addons.mozilla.org/en-gb/firefox/addon/foxyproxy-standard/
+  `curl -x http://proxy.matjaz.it:8080 --proxy-user gustin:pwgustin --proxy-basic -L http://wikipedia.org`
+- Basic authentication working correctly
+- `sudo ln -s /home/ubuntu/Development/IncrementalProxy/squid.conf /etc/squid3/squid.conf` symbolic link of the config file to the one in the git repository
+- Domains whitelist in git repo
