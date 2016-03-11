@@ -2,10 +2,7 @@
 -- Docs: http://wiki.squid-cache.org/ConfigExamples/Authenticate/Mysql
 
 create database squid;
-grant select on squid.* to root@localhost;
-create user ubuntu@localhost;
--- REMEMBER: run a "set password for ubuntu@localhost = PASSWORD('cleartext_password');" in the mysql command line!!
-grant select on squid.* to ubuntu@localhost;
+grant select on squid.* to squid@localhost identified by 'squidpwtomysql';
 use squid;
 CREATE TABLE `passwd` (
     `user`     varchar(32) NOT NULL default '',
