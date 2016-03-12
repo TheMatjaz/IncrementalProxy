@@ -15,3 +15,17 @@ CREATE TABLE `passwd` (
     );
 insert into passwd values
     ('testuser','test',1,'Test User','for testing purpose');
+
+CREATE TABLE `blacklist` (
+    `id`      INT(16)      NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `url`     TEXT         NOT NULL,
+    `comment` VARCHAR(200) DEFAULT NULL
+);
+CREATE INDEX idx_url ON `blacklist`(`url`) USING HASH;
+INSERT INTO `blacklist` VALUES
+    ('.facebook.com')
+    , ('.twitter.com')
+    , ('.pintrest.com')
+    , ('.youtube.com')
+    ;
+CREATE TABLE `whitelist` LIKE `blacklist`;
