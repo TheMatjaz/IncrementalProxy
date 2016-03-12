@@ -18,14 +18,14 @@ insert into passwd values
 
 CREATE TABLE `blacklist` (
     `id`      INT(16)      NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    `url`     TEXT         NOT NULL,
+    `domain`     VARCHAR(255) NOT NULL,
     `comment` VARCHAR(200) DEFAULT NULL
 );
-CREATE INDEX idx_url ON `blacklist`(`url`) USING HASH;
-INSERT INTO `blacklist` VALUES
-    ('.facebook.com')
-    , ('.twitter.com')
-    , ('.pintrest.com')
-    , ('.youtube.com')
-    ;
 CREATE TABLE `whitelist` LIKE `blacklist`;
+INSERT INTO `blacklist` (`domain`) VALUES
+    ('facebook.com')
+    , ('twitter.com')
+    , ('pintrest.com')
+    , ('youtube.com')
+    ;
+
