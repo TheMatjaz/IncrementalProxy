@@ -33,4 +33,37 @@ INSERT INTO `domains` (`domain`) VALUES
     , ('%youtube.com')
     , ('%vimeo.com')
     ;
+
+CREATE TABLE `blacklist` (
+      `id` INT(16) NOT NULL AUTO_INCREMENT PRIMARY KEY
+    , `fk_id_user` INT(16) NOT NULL REFERENCES `users`(`id`)
+    , `fk_id_domain` INT(16) NOT NULL REFERENCES `domains`(`id`)
+    );
+
+CREATE VIEW `vw_blacklist` AS 
+    SELECT b.id
+        ,  u.user
+        ,  d.domain
+        FROM `blacklist`     AS `b`
+        LEFT JOIN `users`   AS `u` ON b.fk_id_user = u.id
+        LEFT JOIN `domains` AS `d` ON b.fk_id_domain = d.id
     ;
+
+INSERT INTO `blacklist` (`fk_id_user`, `fk_id_domain`) VALUES
+      ((SELECT id FROM users WHERE user = 'gustin'), (SELECT id FROM domains WHERE domain = '%facebook.com'))
+    , ((SELECT id FROM users WHERE user = 'gustin'), (SELECT id FROM domains WHERE domain = '%twitter.com'))
+    , ((SELECT id FROM users WHERE user = 'davanzo'), (SELECT id FROM domains WHERE domain = '%facebook.com'))
+    , ((SELECT id FROM users WHERE user = 'davanzo'), (SELECT id FROM domains WHERE domain = '%youtube.com'))
+    ;
+
+-- Find a blacklisted domain for a user
+SELECT TRUE AS blacklisted
+    FROM `vw_blacklist` AS `b`
+    WHERE b.user = 'gustin'
+        AND 'http://www.facebook.com' LIKE b.domain;
+
+-- As prepared statement
+SELECT TRUE AS blacklisted
+    FROM `vw_blacklist` AS `b`
+    WHERE b.user = ?
+        AND ? LIKE b.domain;
