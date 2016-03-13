@@ -27,3 +27,5 @@ http://www.switchroot.com/how-to-configure-squid-proxy-server-centos-fedora-or-r
 - Squid authentication: http://www.webdnstools.com/articles/squid-proxy-authentication
 https://workaround.org/squid-acls/
 - Activate caching
+- CPAN -i URI to install the URI Perl Module
+- Awesome PostgreSQL database to store the allowed/denied/limbo domains per each user
