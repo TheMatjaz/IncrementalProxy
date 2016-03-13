@@ -98,9 +98,9 @@ CREATE OR REPLACE VIEW incrementalproxy.vw_domains_per_user AS
         ,  d.domain
         ,  dpu.status
         FROM incrementalproxy.domains_per_user AS dpu
-        LEFT JOIN incrementalproxy.users AS u
+        INNER JOIN incrementalproxy.users AS u
             ON dpu.fk_id_user = u.id
-        LEFT JOIN incrementalproxy.domains AS d 
+        INNER JOIN incrementalproxy.domains AS d 
             ON dpu.fk_id_domain = d.id
     ;
 
