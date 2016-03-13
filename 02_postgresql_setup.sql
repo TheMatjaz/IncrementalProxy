@@ -31,17 +31,17 @@ CREATE TABLE incrementalproxy.users (
   , fullname text     DEFAULT  NULL
   , comment  text     DEFAULT  NULL
 
-    PRIMARY KEY (id)
+  , PRIMARY KEY (id)
   , CONSTRAINT password_not_empty
-        CHECK (NOT is_empty(password))
+        CHECK (NOT incrementalproxy.is_empty(password))
   , CONSTRAINT username_length
         CHECK (length(username) < 200)
   , CONSTRAINT fullname_length
         CHECK (length(fullname) < 250)
     );
 
-CREATE INDEX incrementalproxy.idx_user 
-    ON users(username);
+CREATE INDEX idx_user 
+    ON incrementalproxy.users(username);
 
 GRANT SELECT
     ON incrementalproxy.users
@@ -58,16 +58,16 @@ CREATE TABLE incrementalproxy.domains (
   , domain  text   NOT NULL UNIQUE
   , comment text   DEFAULT  NULL
 
-    PRIMARY KEY (id)
+  , PRIMARY KEY (id)
   , CONSTRAINT domain_not_empty
-        CHECK (NOT is_empty(domain))
+        CHECK (NOT incrementalproxy.is_empty(domain))
     );
 
 GRANT SELECT, INSERT, UPDATE
     ON incrementalproxy.domains
     TO squid;
 
-INSERT INTO squid.domains (domain) VALUES
+INSERT INTO incrementalproxy.domains (domain) VALUES
     ('%facebook.com')
   , ('%twitter.com')
   , ('%pintrest.com')
@@ -75,32 +75,30 @@ INSERT INTO squid.domains (domain) VALUES
   , ('%vimeo.com')
     ;
 
-DROP TYPE IF EXISTS squid.enum_domain_status CASCADE;
-CREATE TYPE squid.enum_domain_status AS ENUM (
+DROP TYPE IF EXISTS incrementalproxy.enum_domain_status CASCADE;
+CREATE TYPE incrementalproxy.enum_domain_status AS ENUM (
     'never seen'
   , 'limbo'
   , 'allowed'
   , 'denied'
     );
 
-DROP TABLE IF NOT EXISTS squid.domains_per_user CASCADE;
-CREATE TABLE squid.domains_per_user (
+DROP TABLE IF EXISTS incrementalproxy.domains_per_user CASCADE;
+CREATE TABLE incrementalproxy.domains_per_user (
     id           serial             NOT NULL
   , fk_id_user   smallint           NOT NULL
   , fk_id_domain integer            NOT NULL
-  , status       enum_domain_status DEFAULT 'never seen'
+  , status       incrementalproxy.enum_domain_status DEFAULT 'never seen'
 
-    PRIMARY KEY (id)
+  , PRIMARY KEY (id)
   , FOREIGN KEY (fk_id_user)
-        REFERENCES squid.users(id)
+        REFERENCES incrementalproxy.users(id)
         ON UPDATE CASCADE  -- When the user id is updated or removed
         ON DELETE CASCADE  -- update/delete his/her domains as well.
   , FOREIGN KEY (fk_id_domain)
-        REFERENCES squid.domains(id)
+        REFERENCES incrementalproxy.domains(id)
         ON UPDATE CASCADE
         ON DELETE CASCADE
-  , CONSTRAINT domain_not_empty
-        CHECK (NOT is_empty(domain))
     );
 
 GRANT SELECT, INSERT, UPDATE
@@ -111,10 +109,10 @@ CREATE OR REPLACE VIEW incrementalproxy.vw_domains_per_user AS
     SELECT dpu.id
         ,  u.username
         ,  d.domain
-        ,  d.status
+        ,  dpu.status
         FROM incrementalproxy.domains_per_user AS dpu
         LEFT JOIN incrementalproxy.users AS u
-            ON dpu.fk_id_user = us.id
+            ON dpu.fk_id_user = u.id
         LEFT JOIN incrementalproxy.domains AS d 
             ON dpu.fk_id_domain = d.id
     ;
