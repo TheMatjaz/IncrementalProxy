@@ -20,17 +20,17 @@ INSERT INTO `users` (`user`, `password`, `fullname`, `comment`) VALUES
       ('testuser', 'test', 'Test user', 'for testing purpouse')
     ;
 
-CREATE TABLE `blacklist` (
+CREATE TABLE `domains` (
       `id`      INT(16)      NOT NULL AUTO_INCREMENT PRIMARY KEY
     , `domain`  VARCHAR(255) NOT NULL UNIQUE
     , `comment` VARCHAR(200) DEFAULT NULL
-);
+    );
 
-CREATE TABLE `whitelist` LIKE `blacklist`;
-
-INSERT INTO `blacklist` (`domain`) VALUES
+INSERT INTO `domains` (`domain`) VALUES
       ('%facebook.com')
     , ('%twitter.com')
     , ('%pintrest.com')
     , ('%youtube.com')
+    , ('%vimeo.com')
+    ;
     ;
