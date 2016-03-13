@@ -1,31 +1,36 @@
 -- Mysql setup for Squid authentication
 -- Docs: http://wiki.squid-cache.org/ConfigExamples/Authenticate/Mysql
 
-create database squid;
-grant select on squid.* to squid@localhost identified by 'squidpwtomysql';
-use squid;
+CREATE DATABASE `squid`;
+
+GRANT SELECT ON `squid`.* to `squid`@`localhost` IDENTIFIED BY 'squidpwtomysql';
+
+USE `squid`;
+
 CREATE TABLE `passwd` (
-    `user`     varchar(32) NOT NULL default '',
-    `password` varchar(35) NOT NULL default '',
-    `enabled`  tinyint(1)  NOT NULL default '1',
-    `fullname` varchar(60)          default NULL,
-    `comment`  varchar(60)          default NULL,
+      `user`     VARCHAR(32) NOT NULL DEFAULT ''
+    , `password` VARCHAR(35) NOT NULL DEFAULT ''
+    , `enabled`  TINYINT(1)  NOT NULL DEFAULT '1'
+    , `fullname` VARCHAR(60)          DEFAULT NULL
+    , `comment`  VARCHAR(60)          DEFAULT NULL
     
-    PRIMARY KEY  (`user`)
+    PRIMARY KEY (`user`)
     );
-insert into passwd values
+
+INSERT INTO `passwd` VALUES
     ('testuser','test',1,'Test User','for testing purpose');
 
 CREATE TABLE `blacklist` (
-    `id`      INT(16)      NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    `domain`     VARCHAR(255) NOT NULL,
-    `comment` VARCHAR(200) DEFAULT NULL
+      `id`      INT(16)      NOT NULL AUTO_INCREMENT PRIMARY KEY
+    , `domain`  VARCHAR(255) NOT NULL UNIQUE
+    , `comment` VARCHAR(200) DEFAULT NULL
 );
-CREATE TABLE `whitelist` LIKE `blacklist`;
-INSERT INTO `blacklist` (`domain`) VALUES
-    ('facebook.com')
-    , ('twitter.com')
-    , ('pintrest.com')
-    , ('youtube.com')
-    ;
 
+CREATE TABLE `whitelist` LIKE `blacklist`;
+
+INSERT INTO `blacklist` (`domain`) VALUES
+      ('%facebook.com')
+    , ('%twitter.com')
+    , ('%pintrest.com')
+    , ('%youtube.com')
+    ;
