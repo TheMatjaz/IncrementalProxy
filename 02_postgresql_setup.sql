@@ -6,14 +6,14 @@ CREATE ROLE squid
     WITH LOGIN 
     ENCRYPTED PASSWORD 'squidpostgresqlpw';
 
-CREATE SCHEMA IF NOT EXISTS squid
+CREATE SCHEMA IF NOT EXISTS incrementalproxy
     AUTHORIZATION squid;
 
 -- Set the pg_hba.conf file to allow only localhost connections from 
 -- the squid user: 
 -- http://www.postgresql.org/docs/current/static/auth-pg-hba-conf.html
 
-CREATE OR REPLACE FUNCTION squid.is_empty(string text)
+CREATE OR REPLACE FUNCTION incrementalproxy.is_empty(string text)
     RETURNS BOOLEAN
     RETURNS NULL ON NULL INPUT
     IMMUTABLE
@@ -22,10 +22,10 @@ CREATE OR REPLACE FUNCTION squid.is_empty(string text)
         SELECT string ~ '^[[:space:]]*$';
     $body$;
 
-DROP TABLE IF EXISTS squid.users CASCADE;
-CREATE TABLE users (
+DROP TABLE IF EXISTS incrementalproxy.users CASCADE;
+CREATE TABLE incrementalproxy.users (
     id       smallserial   NOT NULL
-  , user     text     NOT NULL UNIQUE
+  , username text     NOT NULL UNIQUE
   , password text     NOT NULL
   , enabled  boolean  NOT NULL DEFAULT TRUE
   , fullname text     DEFAULT  NULL
@@ -34,26 +34,26 @@ CREATE TABLE users (
     PRIMARY KEY (id)
   , CONSTRAINT password_not_empty
         CHECK (NOT is_empty(password))
-  , CONSTRAINT user_name_length
-        CHECK (length(user) < 200)
+  , CONSTRAINT username_length
+        CHECK (length(username) < 200)
   , CONSTRAINT fullname_length
         CHECK (length(fullname) < 250)
     );
 
-CREATE INDEX squid.idx_user 
-    ON users(user);
+CREATE INDEX incrementalproxy.idx_user 
+    ON users(username);
 
 GRANT SELECT
-    ON squid.users
+    ON incrementalproxy.users
     TO squid;
 
-INSERT INTO squid.users (user, password, fullname, comment) VALUES
+INSERT INTO incrementalproxy.users (username, password, fullname, comment) VALUES
     ('testuser', 'test', 'Mr. Test User', 'For testing purpouse')
   , ('testuser2', 'test', 'Mr. Test User 2', NULL)
     ;
 
-DROP TABLE IF EXISTS squid.domains CASCADE;
-CREATE TABLE squid.domains (
+DROP TABLE IF EXISTS incrementalproxy.domains CASCADE;
+CREATE TABLE incrementalproxy.domains (
     id      serial NOT NULL
   , domain  text   NOT NULL UNIQUE
   , comment text   DEFAULT  NULL
@@ -64,8 +64,8 @@ CREATE TABLE squid.domains (
     );
 
 GRANT SELECT, INSERT, UPDATE
-    ON squid.domains
-    TO squid.squid;
+    ON incrementalproxy.domains
+    TO squid;
 
 INSERT INTO squid.domains (domain) VALUES
     ('%facebook.com')
@@ -104,18 +104,18 @@ CREATE TABLE squid.domains_per_user (
     );
 
 GRANT SELECT, INSERT, UPDATE
-    ON squid.domains
-    TO squid.squid;
+    ON incrementalproxy.domains
+    TO squid;
 
-CREATE OR REPLACE VIEW squid.vw_domains_per_user AS 
+CREATE OR REPLACE VIEW incrementalproxy.vw_domains_per_user AS 
     SELECT dpu.id
-        ,  u.user
+        ,  u.username
         ,  d.domain
         ,  d.status
-        FROM squid.domains_per_user AS dpu
-        LEFT JOIN squid.users AS u
+        FROM incrementalproxy.domains_per_user AS dpu
+        LEFT JOIN incrementalproxy.users AS u
             ON dpu.fk_id_user = us.id
-        LEFT JOIN squid.domains AS d 
+        LEFT JOIN incrementalproxy.domains AS d 
             ON dpu.fk_id_domain = d.id
     ;
 
