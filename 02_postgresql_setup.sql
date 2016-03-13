@@ -1,16 +1,5 @@
 -- postgresql_setup.sql
 
--- DATABASE SETUP
-DROP DATABASE IF EXISTS squid;
-CREATE DATABASE squid
-    OWNER = matjaz
-    ENCODING = 'UTF8'
-    LC_COLLATE = 'it_IT.UTF-8'
-    LC_CTYPE = 'it_IT.UTF-8'
-    CONNECTION LIMIT = 1000
-    TEMPLATE = template0
-    ;
-
 BEGIN;
 
 CREATE ROLE squid 
