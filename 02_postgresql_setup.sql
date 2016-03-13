@@ -104,5 +104,46 @@ CREATE OR REPLACE VIEW incrementalproxy.vw_domains_per_user AS
             ON dpu.fk_id_domain = d.id
     ;
 
+CREATE OR REPLACE RULE insert_domains_to_vw
+    AS ON INSERT
+    TO incrementalproxy.vw_domains_per_user
+    DO INSTEAD (
+        INSERT INTO incrementalproxy.domains (domain) VALUES
+            (NEW.domain)
+            ON CONFLICT DO NOTHING
+            ;
+        INSERT INTO incrementalproxy.domains_per_user
+            (fk_id_user, fk_id_domain, status) VALUES
+            ((SELECT id FROM incrementalproxy.users WHERE username = NEW.username)
+              , (SELECT id FROM incrementalproxy.domains WHERE domain = NEW.domain)
+              , (NEW.status))
+            ;
+    );
+
+CREATE OR REPLACE RULE update_domains_in_vw
+    AS ON UPDATE
+    TO incrementalproxy.vw_domains_per_user
+    DO INSTEAD (
+        UPDATE incrementalproxy.domains 
+            SET domain = NEW.domain
+            WHERE domain = OLD.domain
+            ;
+        UPDATE incrementalproxy.domains_per_user
+            SET status = NEW.status
+            WHERE fk_id_user = (SELECT id FROM incrementalproxy.users WHERE username = OLD.username)
+                AND fk_id_domain = (SELECT id FROM incrementalproxy.domains WHERE domain = NEW.domain)
+            ;
+    );
+
+CREATE OR REPLACE RULE delete_domains_from_vw
+    AS ON DELETE
+    TO incrementalproxy.vw_domains_per_user
+    DO INSTEAD (
+        DELETE FROM incrementalproxy.domains_per_user
+            WHERE fk_id_user = (SELECT id FROM incrementalproxy.users WHERE username = OLD.username)
+                AND fk_id_domain = (SELECT id FROM incrementalproxy.domains WHERE domain = OLD.domain)
+            ;
+    );
+
 --ROLLBACK;
 COMMIT;
