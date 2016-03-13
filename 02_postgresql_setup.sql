@@ -6,15 +6,14 @@ CREATE ROLE squid
     WITH LOGIN 
     ENCRYPTED PASSWORD 'squidpostgresqlpw';
 
+CREATE SCHEMA IF NOT EXISTS squid
+    AUTHORIZATION squid;
+
 -- Set the pg_hba.conf file to allow only localhost connections from 
 -- the squid user: 
 -- http://www.postgresql.org/docs/current/static/auth-pg-hba-conf.html
 
-GRANT SELECT, INSERT, UPDATE
-    ON DATABASE squid
-    TO squid;
-
-CREATE OR REPLACE FUNCTION is_empty(string text)
+CREATE OR REPLACE FUNCTION squid.is_empty(string text)
     RETURNS BOOLEAN
     RETURNS NULL ON NULL INPUT
     IMMUTABLE
@@ -23,7 +22,7 @@ CREATE OR REPLACE FUNCTION is_empty(string text)
         SELECT string ~ '^[[:space:]]*$';
     $body$;
 
-DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS squid.users CASCADE;
 CREATE TABLE users (
     id       smallserial   NOT NULL
   , user     text     NOT NULL UNIQUE
@@ -41,16 +40,20 @@ CREATE TABLE users (
         CHECK (length(fullname) < 250)
     );
 
-CREATE INDEX idx_user 
+CREATE INDEX squid.idx_user 
     ON users(user);
 
-INSERT INTO users (user, password, fullname, comment) VALUES
+GRANT SELECT
+    ON squid.users
+    TO squid;
+
+INSERT INTO squid.users (user, password, fullname, comment) VALUES
     ('testuser', 'test', 'Mr. Test User', 'For testing purpouse')
   , ('testuser2', 'test', 'Mr. Test User 2', NULL)
     ;
 
-DROP TABLE IF EXISTS domains CASCADE;
-CREATE TABLE domains (
+DROP TABLE IF EXISTS squid.domains CASCADE;
+CREATE TABLE squid.domains (
     id      serial NOT NULL
   , domain  text   NOT NULL UNIQUE
   , comment text   DEFAULT  NULL
@@ -60,7 +63,11 @@ CREATE TABLE domains (
         CHECK (NOT is_empty(domain))
     );
 
-INSERT INTO domains (domain) VALUES
+GRANT SELECT, INSERT, UPDATE
+    ON squid.domains
+    TO squid.squid;
+
+INSERT INTO squid.domains (domain) VALUES
     ('%facebook.com')
   , ('%twitter.com')
   , ('%pintrest.com')
@@ -68,16 +75,16 @@ INSERT INTO domains (domain) VALUES
   , ('%vimeo.com')
     ;
 
-DROP TYPE IF EXISTS enum_domain_status CASCADE;
-CREATE TYPE enum_domain_status AS ENUM (
+DROP TYPE IF EXISTS squid.enum_domain_status CASCADE;
+CREATE TYPE squid.enum_domain_status AS ENUM (
     'never seen'
   , 'limbo'
   , 'allowed'
   , 'denied'
     );
 
-DROP TABLE IF NOT EXISTS domains_per_user CASCADE;
-CREATE TABLE domains_per_user (
+DROP TABLE IF NOT EXISTS squid.domains_per_user CASCADE;
+CREATE TABLE squid.domains_per_user (
     id           serial             NOT NULL
   , fk_id_user   smallint           NOT NULL
   , fk_id_domain integer            NOT NULL
@@ -85,26 +92,30 @@ CREATE TABLE domains_per_user (
 
     PRIMARY KEY (id)
   , FOREIGN KEY (fk_id_user)
-        REFERENCES users(id)
+        REFERENCES squid.users(id)
         ON UPDATE CASCADE  -- When the user id is updated or removed
         ON DELETE CASCADE  -- update/delete his/her domains as well.
   , FOREIGN KEY (fk_id_domain)
-        REFERENCES domains(id)
+        REFERENCES squid.domains(id)
         ON UPDATE CASCADE
         ON DELETE CASCADE
   , CONSTRAINT domain_not_empty
         CHECK (NOT is_empty(domain))
     );
 
-CREATE OR REPLACE VIEW vw_domains_per_user AS 
+GRANT SELECT, INSERT, UPDATE
+    ON squid.domains
+    TO squid.squid;
+
+CREATE OR REPLACE VIEW squid.vw_domains_per_user AS 
     SELECT dpu.id
         ,  u.user
         ,  d.domain
         ,  d.status
-        FROM domains_per_user AS dpu
-        LEFT JOIN users AS u
+        FROM squid.domains_per_user AS dpu
+        LEFT JOIN squid.users AS u
             ON dpu.fk_id_user = us.id
-        LEFT JOIN domains AS d 
+        LEFT JOIN squid.domains AS d 
             ON dpu.fk_id_domain = d.id
     ;
 
