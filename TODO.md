@@ -1,13 +1,11 @@
 TODO
 ====
 
+- http://www.switchroot.com/how-to-configure-squid-to-authenticate-users
+- http://wiki.squid-cache.org/Features/Authentication#Proxy_Authentication
 - Squid Helpers http://wiki.squid-cache.org/Features/AddonHelpers#Access_Control_.28ACL.29
-- Activate caching
-
-ABORTED
-=======
-
-- HTTPS connections error pages: IMPOSSIBLE! http://serverfault.com/a/639692 and https://www.websense.com/support/article/kbarticle/Block-pages-for-HTTPS-connections-are-not-displayed
+- Config example http://wiki.squid-cache.org/ConfigExamples/Authenticate/Bypassù
+- HTTPS connections
 
 DONE
 ====
@@ -20,8 +18,6 @@ DONE
 - Add whitelist (http://www.webdnstools.com/articles/squid-proxy-whitelist)
 http://www.switchroot.com/how-to-configure-squid-proxy-server-centos-fedora-or-rhel
 - Mysql DB preparation for authentication: http://wiki.squid-cache.org/ConfigExamples/Authenticate/Mysql
-- http://www.switchroot.com/how-to-configure-squid-to-authenticate-users
-- http://wiki.squid-cache.org/Features/Authentication#Proxy_Authentication
 - Testing the proxy with Basic authentication: https://addons.mozilla.org/en-gb/firefox/addon/foxyproxy-standard/
   `curl -x http://proxy.matjaz.it:8080 --proxy-user gustin:pwgustin --proxy-basic -L http://wikipedia.org`
 - Basic authentication working correctly
@@ -30,4 +26,6 @@ http://www.switchroot.com/how-to-configure-squid-proxy-server-centos-fedora-or-r
 - Custom error pages setup http://www.thedumbterminal.co.uk/posts/2005/11/changing_squid_error_pages.html
 - Squid authentication: http://www.webdnstools.com/articles/squid-proxy-authentication
 https://workaround.org/squid-acls/
-
+- Activate caching
+- CPAN -i URI to install the URI Perl Module
+- Awesome PostgreSQL database to store the allowed/denied/limbo domains per each user
