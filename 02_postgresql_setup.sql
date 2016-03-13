@@ -47,11 +47,6 @@ GRANT SELECT
     ON incrementalproxy.users
     TO squid;
 
-INSERT INTO incrementalproxy.users (username, password, fullname, comment) VALUES
-    ('testuser', 'test', 'Mr. Test User', 'For testing purpouse')
-  , ('testuser2', 'test', 'Mr. Test User 2', NULL)
-    ;
-
 DROP TABLE IF EXISTS incrementalproxy.domains CASCADE;
 CREATE TABLE incrementalproxy.domains (
     id      serial NOT NULL
@@ -66,14 +61,6 @@ CREATE TABLE incrementalproxy.domains (
 GRANT SELECT, INSERT, UPDATE
     ON incrementalproxy.domains
     TO squid;
-
-INSERT INTO incrementalproxy.domains (domain) VALUES
-    ('%facebook.com')
-  , ('%twitter.com')
-  , ('%pintrest.com')
-  , ('%youtube.com')
-  , ('%vimeo.com')
-    ;
 
 DROP TYPE IF EXISTS incrementalproxy.enum_domain_status CASCADE;
 CREATE TYPE incrementalproxy.enum_domain_status AS ENUM (
