@@ -88,7 +88,7 @@ CREATE TABLE incrementalproxy.domains_per_user (
         ON DELETE CASCADE
     );
 
-GRANT SELECT, INSERT, UPDATE
+GRANT SELECT, INSERT, UPDATE, DELETE
     ON incrementalproxy.domains
     TO squid;
 
