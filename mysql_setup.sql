@@ -34,22 +34,24 @@ INSERT INTO `domains` (`domain`) VALUES
     , ('%vimeo.com')
     ;
 
-CREATE TABLE `blacklist` (
+CREATE TABLE `domains_per_user` (
       `id` INT(16) NOT NULL AUTO_INCREMENT PRIMARY KEY
     , `fk_id_user` INT(16) NOT NULL REFERENCES `users`(`id`)
     , `fk_id_domain` INT(16) NOT NULL REFERENCES `domains`(`id`)
+    , `status` ENUM('limbo', 'allowed', 'denied') DEFAULT NULL
     );
 
-CREATE VIEW `vw_blacklist` AS 
+CREATE VIEW `vw_domains_per_user` AS 
     SELECT b.id
         ,  u.user
         ,  d.domain
-        FROM `blacklist`     AS `b`
+        ,  d.status
+        FROM `blacklist`    AS `b`
         LEFT JOIN `users`   AS `u` ON b.fk_id_user = u.id
-        LEFT JOIN `domains` AS `d` ON b.fk_id_domain = d.id
+        LEFT JOIN `domains_per_user` AS `d` ON b.fk_id_domain = d.id
     ;
 
-INSERT INTO `blacklist` (`fk_id_user`, `fk_id_domain`) VALUES
+INSERT INTO `domains_per_user` (`fk_id_user`, `fk_id_domain`) VALUES
       ((SELECT id FROM users WHERE user = 'gustin'), (SELECT id FROM domains WHERE domain = '%facebook.com'))
     , ((SELECT id FROM users WHERE user = 'gustin'), (SELECT id FROM domains WHERE domain = '%twitter.com'))
     , ((SELECT id FROM users WHERE user = 'davanzo'), (SELECT id FROM domains WHERE domain = '%facebook.com'))
@@ -57,13 +59,26 @@ INSERT INTO `blacklist` (`fk_id_user`, `fk_id_domain`) VALUES
     ;
 
 -- Find a blacklisted domain for a user
-SELECT TRUE AS blacklisted
-    FROM `vw_blacklist` AS `b`
+SELECT status
+    FROM `vw_domains_per_user` AS `b`
     WHERE b.user = 'gustin'
         AND 'http://www.facebook.com' LIKE b.domain;
 
 -- As prepared statement
-SELECT TRUE AS blacklisted
-    FROM `vw_blacklist` AS `b`
+SELECT status
+    FROM `vw_domains_per_user` AS `b`
     WHERE b.user = ?
         AND ? LIKE b.domain;
+
+-- Find domains in limbos per each user
+SELECT id
+    ,  user
+    ,  domain
+    FROM vw_domains_per_user
+    WHERE status = 'limbo';
+
+-- Set status of a domain per user
+UPDATE domains_per_user
+    SET status = ?
+    WHERE 
+    
