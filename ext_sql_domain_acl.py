@@ -95,14 +95,14 @@ def extract_domain_from_url(url):
     else:
         # Probably happens if the url has no protocol
         # example: "facebook.com/messages/something.html"
-        return parse_result.netloc.split('/', 1)[0]
+        return parse_result.path.split('/', 1)[0]
 
 def extract_domain_and_username_from_line(line):
     # The line is formatted as "URL username"
     # Example: "https://www.facebook.com/index.html?var=2 johndoe"
     url, username = line.strip().split(' ', 1)
     url = url.strip('%')
-    username = url.strip('%')
+    username = username.strip('%')
     return extract_domain_from_url(url), username
 
 def cycle_over_stdin_lines(controller):
@@ -159,8 +159,8 @@ is allowed to access a certain domain or not"""
 
 def main():
     args = parse_command_line_arguments()
-    prepared_statement = "SELECT TRUE FROM {:s} WHERE {:s} = %s AND %s LIKE {:s}".format(args.db_table, args.db_username_column, args.db_domain_column)
-    controller = DomainAccessControllerOnPostgreSql(args.persist_connection, args.db_host, args.db_name, args.db_user, args.db_passwd, prepared_statement)
+    prepared_statement = "SELECT TRUE FROM {:s} WHERE {:s} = %s AND %s LIKE {:s}".format(args.db_table, args.col_username, args.col_domain)
+    controller = DomainAccessControllerOnPostgreSql(args.persist_connection, args.db_host, args.db_name, args.db_user, args.db_password, prepared_statement)
     cycle_over_stdin_lines(controller)
 
 if __name__ == "__main__":
