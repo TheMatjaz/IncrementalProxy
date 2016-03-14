@@ -9,6 +9,8 @@ import psycopg2.extensions
 from urllib.parse import urlparse
 from sys import stdin
 import argparse
+from gc import collect
+
 
 class DomainAccessControllerOnPostgreSql(object):
     def __init__(self, persist_connection, db_host, db_name, db_user, db_passwd, statement):
@@ -109,14 +111,14 @@ def cycle_over_stdin_lines(controller):
         if controller.open_db_connection_if_closed() == False:
             print(controller.error_string)
             continue
+        if controller.prepare_stament_if_not_already() == False:
+            print(controller.error_string)
+            continue
         domain, username = extract_domain_and_username_from_line(line)
         if controller.is_user_allowed_to_domain(username, domain):
             print("OK")
         else:
             print(controller.error_string)
-        if controller.prepare_stament_if_not_already() == False:
-            print(controller.error_string)
-            continue
         if self.persist_connection == False:
             if controller.close_db_connection_if_open() == False:
                 print(controller.error_string)
