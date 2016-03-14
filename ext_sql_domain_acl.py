@@ -128,7 +128,8 @@ def parse_command_line_arguments():
     this_program_description = """\
 Squid3 external ACL helper script to check if an authenticated user
 is allowed to access a certain domain or not"""
-    parser = argparse.ArgumentParser(description = this_program_description)
+    parser = argparse.ArgumentParser(description = this_program_description,
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("--db-user",
                         default = "squid",
                         help = "User for database access")
