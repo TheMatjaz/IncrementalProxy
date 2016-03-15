@@ -6,7 +6,7 @@
 
 import psycopg2
 from urllib.parse import urlparse
-from sys import stdin
+from sys import stdin, stdout
 import argparse
 from gc import collect
 
@@ -107,18 +107,26 @@ def extract_domain_and_username_from_line(line):
 
 def cycle_over_stdin_lines(controller):
     collect() # Garbage collection to reduce memory before starting
-    for line in stdin:
+    while True:
+        line = stdin.readline()
+        if not line:
+            # EOF
+            break
         if controller.open_db_connection_if_closed() == False:
-            print(controller.error_string)
+            stdout.write(controller.error_string + "\n")
+            stdout.flush()
             continue
         if controller.prepare_statement_if_not_already() == False:
-            print(controller.error_string)
+            stdout.write(controller.error_string + "\n")
+            stdout.flush()
             continue
         domain, username = extract_domain_and_username_from_line(line)
         if controller.is_user_allowed_to_domain(username, domain):
-            print("OK")
+            stdout.write("OK\n")
+            stdout.flush()
         else:
-            print(controller.error_string)
+            stdout.write(controller.error_string + "\n")
+            stdout.flush()
 
 def parse_command_line_arguments():
     this_program_description = """\
@@ -156,7 +164,8 @@ def main():
     controller = DomainAccessControllerOnPostgreSql(args.db_host, args.db_name, args.db_user, args.db_password, prepared_statement)
     cycle_over_stdin_lines(controller)
     if controller.close_db_connection_if_open() == False:
-        print(controller.error_string)
+        stdout.write(controller.error_string + "\n")
+        stdout.flush()
 
 if __name__ == "__main__":
     main()
