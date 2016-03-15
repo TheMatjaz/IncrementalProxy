@@ -6,6 +6,11 @@ TODO
 - Squid Helpers http://wiki.squid-cache.org/Features/AddonHelpers#Access_Control_.28ACL.29
 - Config example http://wiki.squid-cache.org/ConfigExamples/Authenticate/Bypassù
 - HTTPS connections
+- Check the status column
+- Tag messages in error responses
+- Logging to file and DB for the helper script
+- Logging to DB for accesses on the table (a trigger on the domains_per_user view)
+
 
 DONE
 ====
@@ -30,3 +35,4 @@ https://workaround.org/squid-acls/
 - CPAN -i URI to install the URI Perl Module
 - Awesome PostgreSQL database to store the allowed/denied/limbo domains per each user
 - Enabled PG access from anywhere to DB squid and user squid
+- Installed "cpan -i DBD::Pg" to use Postgresql for authentication instead of Mysql
