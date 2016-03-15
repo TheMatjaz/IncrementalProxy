@@ -5,7 +5,6 @@
 # to access a certain domain or not
 
 import psycopg2
-import psycopg2.extensions
 from urllib.parse import urlparse
 from sys import stdin
 import argparse
@@ -39,12 +38,12 @@ class DomainAccessControllerOnPostgreSql(object):
     def prepare_statement_if_not_already(self):
         if self.prepared_cursor is None:
             try:
-                self.prepared_cursor = self.connection.cursor(cursor_factory = PreparingCursor)
+                self.prepared_cursor = self.connection.cursor()
             except:
-                self.error_string = "ERR Unable to create cursor for prepared statement"
+                self.error_string = "ERR Unable to create cursor"
                 return False
             try:
-                self.prepared_cursor.prepare(self.prepared_statement)
+                self.prepared_cursor.execute(self.prepared_statement)
             except:
                 self.error_string = "ERR Unable to prepare statement"
                 return False
@@ -72,7 +71,8 @@ class DomainAccessControllerOnPostgreSql(object):
 
     def is_user_allowed_to_domain(self, username, domain):
         try:
-            self.prepared_cursor.execute(username, domain)
+            execute_statement = "EXECUTE user_domain_select (%s, %s);"
+            self.prepared_cursor.execute(execute_statement, username, domain)
         except:
             self.error_string = "ERR Unable to execute prepared statement"
             return False
@@ -151,7 +151,7 @@ is allowed to access a certain domain or not"""
 
 def main():
     args = parse_command_line_arguments()
-    prepared_statement = "SELECT TRUE FROM {:s} WHERE {:s} = %s AND %s LIKE {:s}".format(args.db_table, args.col_username, args.col_domain)
+    prepared_statement = "PREPARE user_domain_select (text, text) AS SELECT TRUE FROM {:s} WHERE {:s} = $1 AND $2 LIKE {:s};".format(args.db_table, args.col_username, args.col_domain)
     controller = DomainAccessControllerOnPostgreSql(args.db_host, args.db_name, args.db_user, args.db_password, prepared_statement)
     cycle_over_stdin_lines(controller)
     if controller.close_db_connection_if_open() == False:
