@@ -15,7 +15,7 @@ def extract_domain_from_url(url):
     else:
         # Probably happens if the url has no protocol
         # example: "facebook.com/messages/something.html"
-        return parse_result.netloc.split('/', 1)[0]
+        return parse_result.path.split('/', 1)[0]
 
 def extract_domain_and_username_from_line(line):
     # The line is formatted as "URL username"
@@ -28,9 +28,9 @@ def extract_domain_and_username_from_line(line):
 
 logfile = open("/tmp/squidhelper.log", 'a')
 for line in stdin:
-    logfile.write(line)
+    logfile.write("LINE> " + line)
     domain, username = extract_domain_and_username_from_line(line)
-    logfile.write(domain, username)
+    logfile.write("RSLT> " + domain + " " + username + "\n")
     print("OK")
 
 logfile.close()
