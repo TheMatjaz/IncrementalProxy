@@ -29,3 +29,4 @@ https://workaround.org/squid-acls/
 - Activate caching
 - CPAN -i URI to install the URI Perl Module
 - Awesome PostgreSQL database to store the allowed/denied/limbo domains per each user
+- Enabled PG access from anywhere to DB squid and user squid

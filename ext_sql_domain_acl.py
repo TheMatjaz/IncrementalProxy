@@ -72,12 +72,13 @@ class DomainAccessControllerOnPostgreSql(object):
     def is_user_allowed_to_domain(self, username, domain):
         try:
             execute_statement = "EXECUTE user_domain_select (%s, %s);"
-            self.prepared_cursor.execute(execute_statement, username, domain)
+            self.prepared_cursor.execute(execute_statement, (username, domain))
         except:
             self.error_string = "ERR Unable to execute prepared statement"
             return False
         row = self.prepared_cursor.fetchone()
-        if row is None:
+        if row is not None:
+            # The domain is in the blacklist for this user
             self.error_string = "ERR User is not allowed to this domain"
             return False
         else:
