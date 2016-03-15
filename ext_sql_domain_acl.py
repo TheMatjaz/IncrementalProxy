@@ -26,7 +26,7 @@ class DomainAccessControllerOnPostgreSql(object):
 
     def open_db_connection_if_closed(self):
         if self.connection is None:
-            db_connect_string = "host='{:s}' dbname='{:s}' user='{:s}' password='{:s}'".format(self.db_name, self.db_user, self.db_passwd, self.db_host)
+            db_connect_string = "host='{:s}' dbname='{:s}' user='{:s}' password='{:s}'".format(self.db_host, self.db_name, self.db_user, self.db_passwd)
             try:
                 self.connection = psycopg2.connect(db_connect_string)
             except:
