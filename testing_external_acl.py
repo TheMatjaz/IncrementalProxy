@@ -21,9 +21,7 @@ def extract_domain_and_username_from_line(line):
     # The line is formatted as "URL username"
     # Example: "https://www.facebook.com/index.html?var=2 johndoe"
     url, username = line.strip().split(' ', 1)
-    url = url.strip('%')
-    username = username.strip('%')
-    return extract_domain_from_url(url), username
+    return url, username
 
 
 logfile = open("/tmp/squidhelper.log", 'a')
@@ -37,7 +35,10 @@ while True:
     domain, username = extract_domain_and_username_from_line(line)
     logfile.write("RSLT> " + domain + " " + username + "\n")
     logfile.flush()
-    stdout.write("OK\n")
+    if domain.endswith("facebook.com"):
+        stdout.write("ERR\n")
+    else:
+        stdout.write("OK\n")
     stdout.flush()
 
 logfile.close()
