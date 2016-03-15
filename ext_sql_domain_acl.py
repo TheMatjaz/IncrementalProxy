@@ -13,8 +13,7 @@ from gc import collect
 
 
 class DomainAccessControllerOnPostgreSql(object):
-    def __init__(self, persist_connection, db_host, db_name, db_user, db_passwd, statement):
-        self.persist_connection = persist_connection;
+    def __init__(self, db_host, db_name, db_user, db_passwd, statement):
         self.connection = None
         self.db_host = db_host
         self.db_name = db_name
@@ -119,10 +118,6 @@ def cycle_over_stdin_lines(controller):
             print("OK")
         else:
             print(controller.error_string)
-        if controller.persist_connection == False:
-            if controller.close_db_connection_if_open() == False:
-                print(controller.error_string)
-                continue
 
 def parse_command_line_arguments():
     this_program_description = """\
@@ -136,9 +131,6 @@ is allowed to access a certain domain or not"""
     parser.add_argument("--db-password",
                         default = "squidpostgresqlpw",
                         help = "Clear text password for database access")
-    parser.add_argument("--persist-connection",
-                        default = True,
-                        help = "Keep the database connection open between queries")
     parser.add_argument("--db-host",
                         default = "localhost",
                         help = "Host of the database as DNS name or IP address")
@@ -160,8 +152,10 @@ is allowed to access a certain domain or not"""
 def main():
     args = parse_command_line_arguments()
     prepared_statement = "SELECT TRUE FROM {:s} WHERE {:s} = %s AND %s LIKE {:s}".format(args.db_table, args.col_username, args.col_domain)
-    controller = DomainAccessControllerOnPostgreSql(args.persist_connection, args.db_host, args.db_name, args.db_user, args.db_password, prepared_statement)
+    controller = DomainAccessControllerOnPostgreSql(args.db_host, args.db_name, args.db_user, args.db_password, prepared_statement)
     cycle_over_stdin_lines(controller)
+    if controller.close_db_connection_if_open() == False:
+        print(controller.error_string)
 
 if __name__ == "__main__":
     main()
