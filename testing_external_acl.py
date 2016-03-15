@@ -28,9 +28,9 @@ def extract_domain_and_username_from_line(line):
 
 logfile = open("/tmp/squidhelper.log", 'a')
 for line in stdin:
-    logfile.write(line)
+    logfile.write("LINE> " + line)
     domain, username = extract_domain_and_username_from_line(line)
-    logfile.write(domain + " " + username)
+    logfile.write("RSLT> " + domain + " " + username + "\n")
     print("OK")
 
 logfile.close()
