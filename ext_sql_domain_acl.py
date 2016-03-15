@@ -38,7 +38,7 @@ class DomainAccessControllerOnPostgreSql(object):
             return True
 
     def prepare_statement_if_not_already(self):
-        if self.prepared_cursor is not None:
+        if self.prepared_cursor is None:
             try:
                 self.prepared_cursor = self.connection.cursor(cursor_factory = PreparingCursor)
             except:
@@ -111,7 +111,7 @@ def cycle_over_stdin_lines(controller):
         if controller.open_db_connection_if_closed() == False:
             print(controller.error_string)
             continue
-        if controller.prepare_stament_if_not_already() == False:
+        if controller.prepare_statement_if_not_already() == False:
             print(controller.error_string)
             continue
         domain, username = extract_domain_and_username_from_line(line)
@@ -119,7 +119,7 @@ def cycle_over_stdin_lines(controller):
             print("OK")
         else:
             print(controller.error_string)
-        if self.persist_connection == False:
+        if controller.persist_connection == False:
             if controller.close_db_connection_if_open() == False:
                 print(controller.error_string)
                 continue
