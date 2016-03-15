@@ -4,7 +4,7 @@
 # Testing script to understand how and what Squid passes to an external_acl
 # helper script
 
-from sys import stdin
+from sys import stdin, stdout
 from urllib.parse import urlparse
 
 def extract_domain_from_url(url):
@@ -27,10 +27,17 @@ def extract_domain_and_username_from_line(line):
 
 
 logfile = open("/tmp/squidhelper.log", 'a')
-for line in stdin:
+
+while True:
+    line = stdin.readline()
+    if not line:
+        # EOF
+        break
     logfile.write("LINE> " + line)
     domain, username = extract_domain_and_username_from_line(line)
     logfile.write("RSLT> " + domain + " " + username + "\n")
-    print("OK")
+    logfile.flush()
+    stdout.write("OK\n")
+    stdout.flush()
 
 logfile.close()
