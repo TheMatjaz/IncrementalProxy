@@ -60,7 +60,7 @@ CREATE OR REPLACE VIEW incrementalproxy.vw_users AS
         WHERE u.enabled = TRUE;
     ;
 
--- Neede for BASIC authentication
+-- Needed for BASIC authentication
 GRANT SELECT
     ON incrementalproxy.vw_users
     TO squid;
@@ -79,9 +79,6 @@ CREATE TABLE incrementalproxy.domains (
 CREATE INDEX idx_domain
     ON incrementalproxy.domains(domain);
 
---GRANT SELECT, INSERT, UPDATE
---    ON incrementalproxy.domains
---    TO squid;
 
 DROP TYPE IF EXISTS incrementalproxy.enum_domain_status CASCADE;
 CREATE TYPE incrementalproxy.enum_domain_status AS ENUM (
@@ -97,7 +94,7 @@ CREATE TABLE incrementalproxy.domains_per_user (
   , fk_id_domain integer            NOT NULL
   , status       incrementalproxy.enum_domain_status NOT NULL DEFAULT 'limbo'
 
-  , PRIMARY KEY (id)
+  , PRIMARY KEY (fk_id_user, fk_id_domain)
   , FOREIGN KEY (fk_id_user)
         REFERENCES incrementalproxy.users(id)
         ON UPDATE CASCADE  -- When the user id is updated or removed
@@ -108,13 +105,9 @@ CREATE TABLE incrementalproxy.domains_per_user (
         ON DELETE CASCADE
     );
 
---GRANT SELECT, INSERT, UPDATE
---    ON incrementalproxy.domains
---    TO squid;
 
 CREATE OR REPLACE VIEW incrementalproxy.vw_domains_per_user AS 
-    SELECT dpu.id
-        ,  u.username
+    SELECT u.username
         ,  d.domain
         ,  dpu.status
         FROM incrementalproxy.domains_per_user AS dpu
