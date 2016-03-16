@@ -163,5 +163,10 @@ GRANT SELECT, INSERT
     ON incrementalproxy.vw_domains_per_user
     TO squid;
 
+GRANT USAGE,SELECT
+    ON ALL SEQUENCES
+    IN SCHEMA incrementalproxy
+    TO squid;
+
 --ROLLBACK;
 COMMIT;
