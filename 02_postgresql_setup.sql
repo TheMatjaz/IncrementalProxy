@@ -103,7 +103,7 @@ CREATE OR REPLACE VIEW incrementalproxy.vw_domains_per_user AS
             ON dpu.fk_id_domain = d.id
     ;
 
-CREATE OR REPLACE RULE insert_domains_to_vw
+CREATE OR REPLACE RULE insert_domains_for_user
     AS ON INSERT
     TO incrementalproxy.vw_domains_per_user
     DO INSTEAD (
@@ -119,7 +119,7 @@ CREATE OR REPLACE RULE insert_domains_to_vw
             ;
     );
 
-CREATE OR REPLACE RULE update_domains_in_vw
+CREATE OR REPLACE RULE update_domains_for_user
     AS ON UPDATE
     TO incrementalproxy.vw_domains_per_user
     DO INSTEAD (
@@ -134,7 +134,7 @@ CREATE OR REPLACE RULE update_domains_in_vw
             ;
     );
 
-CREATE OR REPLACE RULE delete_domains_from_vw
+CREATE OR REPLACE RULE delete_domains_for_user
     AS ON DELETE
     TO incrementalproxy.vw_domains_per_user
     DO INSTEAD (
