@@ -1,3 +1,6 @@
+DELETE FROM incrementalproxy.users;
+DELETE FROM incrementalproxy.domains;
+
 INSERT INTO incrementalproxy.users (username, password, fullname, comment) VALUES
     ('testuser', 'test', 'Mr. Test User', 'For testing purpouse')
   , ('testuser2', 'test', 'Mr. Test User 2', NULL)
@@ -5,20 +8,13 @@ INSERT INTO incrementalproxy.users (username, password, fullname, comment) VALUE
   , ('davanzo', 'UnaPasswordACaso', 'Giorgio Davanzo', 'Professore')
     ;
 
-INSERT INTO incrementalproxy.domains (domain) VALUES
-    ('matjaz.it')
-  , ('proxy.matjaz.it')
-  , ('facebook.com')
-  , ('twitter.com')
-  , ('pintrest.com')
-  , ('youtube.com')
-  , ('vimeo.com')
-    ;
-    
-INSERT INTO incrementalproxy.domains_per_user (fk_id_user, fk_id_domain) VALUES
-    ((SELECT id FROM users WHERE username = 'gustin'), (SELECT id FROM domains WHERE domain = 'facebook.com'))
-  , ((SELECT id FROM users WHERE username = 'gustin'), (SELECT id FROM domains WHERE domain = 'twitter.com'))
-  , ((SELECT id FROM users WHERE username = 'davanzo'), (SELECT id FROM domains WHERE domain = 'facebook.com'))
-  , ((SELECT id FROM users WHERE username = 'davanzo'), (SELECT id FROM domains WHERE domain = 'youtube.com'))
+INSERT INTO incrementalproxy.vw_domains_per_user (username, domain, status) VALUES
+    ('gustin', 'facebook.com', 'denied')
+  , ('gustin', 'pintrest.com', 'denied')
+  , ('gustin', 'matjaz.it', 'allowed')
+  , ('gustin', 'proxy.matjaz.it', 'allowed')
+  , ('davanzo', 'facebook.com', 'denied')
+  , ('davanzo', 'twitter.com', 'denied')
+  , ('davanzo', 'google.com', 'limbo')
     ;
 
