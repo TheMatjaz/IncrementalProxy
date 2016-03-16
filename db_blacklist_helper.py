@@ -233,24 +233,36 @@ is allowed to access a certain domain or not"""
                         help = "URL where to redirect a user when accessing a denied domain")
     parser.add_argument("--loglevel",
                         default = "INFO",
-                        help = "Details being logged. Levels are DEBUG, INFO, WARNING, ERROR, CRITICAL")
+                        help = "Details being logged. Levels are DEBUG, INFO, WARNING, ERROR")
+    parser.add_argument("--logfile",
+                        default = "/tmp/db_blacklist_helper.log",
+                        help = "File to store logs of this program into. If not writable, the default value is used.")
 
     arguments_dict = parser.parse_args()
     return arguments_dict
 
-
-
-def main():
-    args = parse_command_line_arguments()
-    logging.basicConfig(filename='/tmp/db_blacklist_helper.log', level=args.loglevel.upper(), format='%(asctime)s | %(levelname)s | %(message)s')
-    logging.info("-------------------------------")
-    logging.info("Starting db_blacklist_helper.py")
+def setup_logging(args):
+    try:
+        logfile = open(args.logfile, 'a')
+        logfile.close()
+    except PermissionError:
+        args.logfile = "/tmp/db_blacklist_helper.log"
+    logging.basicConfig(filename = args.logfile, level = args.loglevel.upper(), format = '%(asctime)s | %(levelname)s | %(message)s')
+    logging.info("==== NEW START ====")
     logging.info("Setting debug level to {:s}".format(args.loglevel.upper()))
     logging.debug("Line arguments are: " + str(args))
+
+def prepare_statements(args):
     prepared_select_statement = "PREPARE status_for_user_on_domain (text, text) AS SELECT status FROM {:s} WHERE {:s} = $1 AND {:s} = $2;".format(args.db_table, args.col_username, args.col_domain)
-    logging.info("Prepared select statement string {:s}".format(prepared_select_statement))
+    logging.debug("Prepared select statement string {:s}".format(prepared_select_statement))
     prepared_insert_statement = "PREPARE insert_new_domain_for_user (text, text) AS INSERT INTO incrementalproxy.vw_domains_per_user ({:s}, {:s}, {:s}) VALUES ($1, $2, 'limbo');".format(args.col_username, args.col_domain, args.col_status)
-    logging.info("Prepared insert statement string {:s}".format(prepared_insert_statement))
+    logging.debug("Prepared insert statement string {:s}".format(prepared_insert_statement))
+    return prepared_select_statement, prepared_insert_statement
+    
+def main():
+    args = parse_command_line_arguments()
+    setup_logging(args)
+    prepared_select_statement, prepared_insert_statement = prepare_statements(args)
     db_access_controller = DomainAccessControllerOnPostgreSql(args.db_host, args.db_name, args.db_user, args.db_password, prepared_select_statement, prepared_insert_statement)
     squid_db_adapter = SquidDatabaseAdapter(db_access_controller, args.redirection_url)
     squid_db_adapter.cycle_over_stdin_lines()
