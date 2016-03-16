@@ -25,6 +25,14 @@ http://pintrest.com/ 140.105.225.106/- gustin GET myip=172.31.24.53 myport=8080
 ftp://pintrest.com/ 140.105.225.106/- gustin GET myip=172.31.24.53 myport=8080
 http://pintrest.com/index.html 140.105.225.106/- gustin GET myip=172.31.24.53 myport=8080
 ```
+- strip leading www from domain???
+- table for webUI administrators logins
+- md5 for logins: users AND admins. Use md5 for both username + password( + salt?)
+- custom error page for unathenticated users. When login fails, show this page. Should be ERR_something
+- timestamps when a domains is added?
+- log tables for any changes in the vw_domains_per_user
+- looks like the insertions queries are not working
+
 
 DONE
 ====
