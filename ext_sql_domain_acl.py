@@ -101,8 +101,6 @@ def extract_domain_and_username_from_line(line):
     # The line is formatted as "URL username"
     # Example: "https://www.facebook.com/index.html?var=2 johndoe"
     url, username = line.strip().split(' ', 1)
-    url = url.strip('%')
-    username = username.strip('%')
     return extract_domain_from_url(url), username
 
 def cycle_over_stdin_lines(controller):
