@@ -117,48 +117,37 @@ CREATE OR REPLACE VIEW incrementalproxy.vw_domains_per_user AS
             ON dpu.fk_id_domain = d.id
     ;
 
-CREATE OR REPLACE RULE insert_domains_for_user
-    AS ON INSERT
-    TO incrementalproxy.vw_domains_per_user
-    DO INSTEAD (
-        INSERT INTO incrementalproxy.domains (domain) VALUES
+CREATE OR REPLACE FUNCTION incrementalproxy.tgfun_insert_domain_for_user()
+    RETURNS TRIGGER
+    LANGUAGE plpgsql
+    SECURITY DEFINER
+    AS $body$
+    BEGIN
+        INSERT INTO incrementalproxy.domains
+            (domain) VALUES
             (NEW.domain)
             ON CONFLICT DO NOTHING
             ;
-        INSERT INTO incrementalproxy.domains_per_user
-            (fk_id_user, fk_id_domain, status) VALUES
+        INSERT INTO incrementalproxy.domains_per_user (fk_id_user, fk_id_domain, status) VALUES
             ((SELECT id FROM incrementalproxy.users WHERE username = NEW.username)
               , (SELECT id FROM incrementalproxy.domains WHERE domain = NEW.domain)
-              , (NEW.status))
+              , NEW.status)
             ON CONFLICT DO NOTHING
             ;
-    );
+        RETURN NEW;
+    END;
+    $body$;
 
-CREATE OR REPLACE RULE update_domains_for_user
-    AS ON UPDATE
-    TO incrementalproxy.vw_domains_per_user
-    DO INSTEAD (
-        INSERT INTO incrementalproxy.domains (domain) VALUES
-            (NEW.domain)
-            ON CONFLICT DO NOTHING
-            ;
-        UPDATE incrementalproxy.domains_per_user
-            SET status = NEW.status
-            WHERE fk_id_user = (SELECT id FROM incrementalproxy.users WHERE username = OLD.username)
-                AND fk_id_domain = (SELECT id FROM incrementalproxy.domains WHERE domain = NEW.domain)
-            ;
-    );
+CREATE TRIGGER tg_on_insert_vw_domains_per_user
+    INSTEAD OF INSERT
+    ON incrementalproxy.vw_domains_per_user
+    FOR EACH ROW
+    EXECUTE PROCEDURE incrementalproxy.tgfun_insert_domain_for_user();
 
-CREATE OR REPLACE RULE delete_domains_for_user
-    AS ON DELETE
-    TO incrementalproxy.vw_domains_per_user
-    DO INSTEAD (
-        DELETE FROM incrementalproxy.domains_per_user
-            WHERE fk_id_user = (SELECT id FROM incrementalproxy.users WHERE username = OLD.username)
-                AND fk_id_domain = (SELECT id FROM incrementalproxy.domains WHERE domain = OLD.domain)
-            ;
-    );
-
+--GRANT EXECUTE
+--    ON FUNCTION incrementalproxy.tgfun_insert_domain_for_user()
+--    TO squid;
+    
 GRANT SELECT, INSERT
     ON incrementalproxy.vw_domains_per_user
     TO squid;
