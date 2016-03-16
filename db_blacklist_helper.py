@@ -182,17 +182,21 @@ is allowed to access a certain domain or not"""
     parser.add_argument("--col-username",
                         default = "username",
                         help = "Name of the column with the usernames")
+    parser.add_argument("--redirection-url",
+                        default = "http://proxy.matjaz.it/",
+                        help = "URL where to redirect a user when accessing a denied domain")
+    parser.add_argument("--logfile",
+                        default = "/tmp/db_blacklist_helper.py",
+                        help = "Name of the log file of this script")
     arguments_dict = parser.parse_args()
     return arguments_dict
 
 def main():
     args = parse_command_line_arguments()
     prepared_statement = "PREPARE user_domain_select (text, text) AS SELECT TRUE FROM {:s} WHERE {:s} = $1 AND $2 LIKE {:s};".format(args.db_table, args.col_username, args.col_domain)
-    controller = DomainAccessControllerOnPostgreSql(args.db_host, args.db_name, args.db_user, args.db_password, prepared_statement)
-    cycle_over_stdin_lines(controller)
-    if controller.close_db_connection_if_open() == False:
-        stdout.write(controller.error_string + "\n")
-        stdout.flush()
+    db_access_controller = DomainAccessControllerOnPostgreSql(args.db_host, args.db_name, args.db_user, args.db_password, prepared_statement)
+    squid_db_adapter = SquidDatabaseAdapter(db_access_controller, args.redirection_url)
+    squid_db_adapter.cycle_over_stdin_lines()
 
 if __name__ == "__main__":
     main()
