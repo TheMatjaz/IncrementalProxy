@@ -78,7 +78,7 @@ CREATE TABLE incrementalproxy.domains_per_user (
     id           serial             NOT NULL
   , fk_id_user   smallint           NOT NULL
   , fk_id_domain integer            NOT NULL
-  , status       incrementalproxy.enum_domain_status DEFAULT 'limbo'
+  , status       incrementalproxy.enum_domain_status NOT NULL DEFAULT 'limbo'
 
   , PRIMARY KEY (id)
   , FOREIGN KEY (fk_id_user)
