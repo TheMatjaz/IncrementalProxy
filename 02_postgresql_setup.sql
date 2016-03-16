@@ -85,7 +85,7 @@ CREATE TABLE incrementalproxy.domains_per_user (
   , fk_id_domain integer            NOT NULL
   , status       incrementalproxy.enum_domain_status NOT NULL DEFAULT 'limbo'
 
-  , PRIMARY KEY (fk_id_user, fk_id_domain)
+  , PRIMARY KEY (id)
   , FOREIGN KEY (fk_id_user)
         REFERENCES incrementalproxy.users(id)
         ON UPDATE CASCADE  -- When the user id is updated or removed
@@ -94,6 +94,8 @@ CREATE TABLE incrementalproxy.domains_per_user (
         REFERENCES incrementalproxy.domains(id)
         ON UPDATE CASCADE
         ON DELETE CASCADE
+  , CONSTRAINT unique_user_domain_pair
+        UNIQUE (fk_id_user, fk_id_domain)
     );
 
 
