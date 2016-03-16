@@ -53,9 +53,16 @@ CREATE TABLE incrementalproxy.users (
 CREATE INDEX idx_user 
     ON incrementalproxy.users(username);
 
+CREATE OR REPLACE VIEW incrementalproxy.vw_users AS 
+    SELECT u.username
+        ,  u.password
+        FROM incrementalproxy.users AS u
+        WHERE u.enabled = TRUE;
+    ;
+
 -- Neede for BASIC authentication
 GRANT SELECT
-    ON incrementalproxy.users
+    ON incrementalproxy.vw_users
     TO squid;
 
 DROP TABLE IF EXISTS incrementalproxy.domains CASCADE;
