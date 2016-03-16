@@ -2,10 +2,12 @@
 
 BEGIN;
 
+DROP ROLE IF EXISTS squid;
 CREATE ROLE squid 
     WITH LOGIN 
     ENCRYPTED PASSWORD 'squidpostgresqlpw';
 
+DROP ROLE IF EXISTS squid_admin;
 CREATE ROLE squid_admin
     WITH LOGIN
     ENCRYPTED PASSWORD 'squidadminpostgresqlpw';
@@ -51,9 +53,16 @@ CREATE TABLE incrementalproxy.users (
 CREATE INDEX idx_user 
     ON incrementalproxy.users(username);
 
--- Needed for BASIC authentication
+CREATE OR REPLACE VIEW incrementalproxy.vw_users AS 
+    SELECT u.username
+        ,  u.password
+        FROM incrementalproxy.users AS u
+        WHERE u.enabled = TRUE;
+    ;
+
+-- Neede for BASIC authentication
 GRANT SELECT
-    ON incrementalproxy.users
+    ON incrementalproxy.vw_users
     TO squid;
 
 DROP TABLE IF EXISTS incrementalproxy.domains CASCADE;
@@ -69,6 +78,10 @@ CREATE TABLE incrementalproxy.domains (
 
 CREATE INDEX idx_domain
     ON incrementalproxy.domains(domain);
+
+--GRANT SELECT, INSERT, UPDATE
+--    ON incrementalproxy.domains
+--    TO squid;
 
 DROP TYPE IF EXISTS incrementalproxy.enum_domain_status CASCADE;
 CREATE TYPE incrementalproxy.enum_domain_status AS ENUM (
@@ -94,6 +107,10 @@ CREATE TABLE incrementalproxy.domains_per_user (
         ON UPDATE CASCADE
         ON DELETE CASCADE
     );
+
+--GRANT SELECT, INSERT, UPDATE
+--    ON incrementalproxy.domains
+--    TO squid;
 
 CREATE OR REPLACE VIEW incrementalproxy.vw_domains_per_user AS 
     SELECT dpu.id
@@ -151,6 +168,11 @@ CREATE OR REPLACE RULE delete_domains_for_user
 
 GRANT SELECT, INSERT
     ON incrementalproxy.vw_domains_per_user
+    TO squid;
+
+GRANT USAGE,SELECT
+    ON ALL SEQUENCES
+    IN SCHEMA incrementalproxy
     TO squid;
 
 --ROLLBACK;
