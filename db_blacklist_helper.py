@@ -113,7 +113,7 @@ class DomainAccessControllerOnPostgreSql(object):
                 logging.info("User {:s} is NOT allowed to domain {:s}".format(username, domain))
                 return False
             else:
-                logging.info("User {:s} is allowed to domain {:s}".format(username, domain))
+                logging.info("User {:s} is allowed to domain {:s} with status {:s}".format(username, domain, status))
                 return True
 
 
@@ -242,14 +242,19 @@ is allowed to access a certain domain or not"""
     return arguments_dict
 
 def setup_logging(args):
+    writable = True
+    logfile = args.logfile
     try:
         logfile = open(args.logfile, 'a')
         logfile.close()
     except PermissionError:
         args.logfile = "/tmp/db_blacklist_helper.log"
+        writable = False
     logging.basicConfig(filename = args.logfile, level = args.loglevel.upper(), format = '%(asctime)s | %(levelname)s | %(message)s')
     logging.info("==== NEW START ====")
     logging.info("Setting debug level to {:s}".format(args.loglevel.upper()))
+    if not writable:
+        logging.warning("Logfile {:s} was not writable. Fallback to {:s}".format(logfile, args.logfile))
     logging.debug("Line arguments are: " + str(args))
 
 def prepare_statements(args):
