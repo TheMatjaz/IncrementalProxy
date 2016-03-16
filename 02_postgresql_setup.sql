@@ -116,6 +116,7 @@ CREATE OR REPLACE RULE insert_domains_for_user
             ((SELECT id FROM incrementalproxy.users WHERE username = NEW.username)
               , (SELECT id FROM incrementalproxy.domains WHERE domain = NEW.domain)
               , (NEW.status))
+            ON CONFLICT DO NOTHING
             ;
     );
 
@@ -123,9 +124,9 @@ CREATE OR REPLACE RULE update_domains_for_user
     AS ON UPDATE
     TO incrementalproxy.vw_domains_per_user
     DO INSTEAD (
-        UPDATE incrementalproxy.domains 
-            SET domain = NEW.domain
-            WHERE domain = OLD.domain
+        INSERT INTO incrementalproxy.domains (domain) VALUES
+            (NEW.domain)
+            ON CONFLICT DO NOTHING
             ;
         UPDATE incrementalproxy.domains_per_user
             SET status = NEW.status
