@@ -222,10 +222,13 @@ is allowed to access a certain domain or not"""
                         help = "Name of the table to select usernames and domains from")
     parser.add_argument("--col-domain",
                         default = "domain",
-                        help = "Name of the column with the domains")
+                        help = "Name of the column with the domains in the table")
     parser.add_argument("--col-username",
                         default = "username",
-                        help = "Name of the column with the usernames")
+                        help = "Name of the column with the usernames in the table")
+    parser.add_argument("--col-status",
+                        default = "status",
+                        help = "Name of the column with the status of a domain per user in the table")
     parser.add_argument("--redirection-url",
                         default = "http://proxy.matjaz.it/",
                         help = "URL where to redirect a user when accessing a denied domain")
@@ -247,7 +250,7 @@ def main():
     logging.debug("Line arguments are: " + str(args))
     prepared_select_statement = "PREPARE status_for_user_on_domain (text, text) AS SELECT status FROM {:s} WHERE {:s} = $1 AND {:s} = $2;".format(args.db_table, args.col_username, args.col_domain)
     logging.info("Prepared select statement string {:s}".format(prepared_select_statement))
-    prepared_insert_statement = "PREPARE insert_new_domain_for_user (text, text) AS INSERT INTO incrementalproxy.vw_domains_per_user ({:s}, {:s}) VALUES ($1, $2);".format(args.col_username, args.col_domain)
+    prepared_insert_statement = "PREPARE insert_new_domain_for_user (text, text) AS INSERT INTO incrementalproxy.vw_domains_per_user ({:s}, {:s}, {:s}) VALUES ($1, $2, 'limbo');".format(args.col_username, args.col_domain, args.col_status)
     logging.info("Prepared insert statement string {:s}".format(prepared_insert_statement))
     db_access_controller = DomainAccessControllerOnPostgreSql(args.db_host, args.db_name, args.db_user, args.db_password, prepared_select_statement, prepared_insert_statement)
     squid_db_adapter = SquidDatabaseAdapter(db_access_controller, args.redirection_url)
