@@ -86,21 +86,39 @@ class DomainAccessControllerOnPostgreSql(object):
             return True
 
 
-def extract_domain_from_url(url):
-    # Thanks to: http://stackoverflow.com/a/21564306/5292928
-    parse_result = urlparse(url) # From urllib.parse
-    if parse_result.netloc != '':
-        return parse_result.netloc
-    else:
-        # Probably happens if the url has no protocol
-        # example: "facebook.com/messages/something.html"
-        return parse_result.path.split('/', 1)[0]
+class SquidInputParser(object):
+    def __init__(self):
+        self.requested_url = None
+        self.username = None
+        self.client_ip = None
+        self.request_method = None
+        self.requested_domain = 
 
-def extract_domain_and_username_from_line(line):
-    # The line is formatted as "URL username"
-    # Example: "https://www.facebook.com/index.html?var=2 johndoe"
-    url, username = line.strip().split(' ', 1)
-    return extract_domain_from_url(url), username
+    def parse_squid_input_line(self, line):
+        # Example input lines that Squid passes to the external redirector tool
+        # URL <Space> client_ip "/" fqdn <Space> user <Space> method [<Space> kvpairs]<NL>
+        #
+        # pintrest.com:443 140.105.225.106/- gustin CONNECT myip=172.31.24.53 myport=8080
+        # http://pintrest.com/ 140.105.225.106/- gustin GET myip=172.31.24.53 myport=8080
+        # ftp://pintrest.com/ 140.105.225.106/- gustin GET myip=172.31.24.53 myport=8080
+        # http://pintrest.com/index.html 140.105.225.106/- gustin GET myip=172.31.24.53 myport=8080
+        line_fields = line.strip().split(' ')
+        self.requested_url = line_fields[0]
+        self.client_ip = line_fields[1].split('/')[0]
+        self.username = line_fields[2]
+        self.request_method = line.fields[3]
+        self.requested_domain = _extract_domain_from_url(self.requested_url)
+        
+    def _extract_domain_from_url(self, url):
+        # Thanks to: http://stackoverflow.com/a/21564306/5292928
+        parse_result = urlparse(url) # From urllib.parse
+        if parse_result.netloc != '':
+            return parse_result.netloc
+        else:
+            # Happens if the url has no protocol
+            # example: "facebook.com:443"
+            return parse_result.path.split(':', 1)[0]
+
 
 def cycle_over_stdin_lines(controller):
     collect() # Garbage collection to reduce memory before starting
