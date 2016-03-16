@@ -14,7 +14,7 @@ import logging
 
 class DomainAccessControllerOnPostgreSql(object):
     def __init__(self, db_host, db_name, db_user, db_passwd, select_statement, insert_statement):
-        logging.info("Creating DomainAccessControllerOnPostgreSql")
+        logging.debug("Creating DomainAccessControllerOnPostgreSql")
         self.connection = None
         self.db_host = db_host
         self.db_name = db_name
@@ -42,19 +42,19 @@ class DomainAccessControllerOnPostgreSql(object):
     def prepare_statement_if_not_already(self):
         if self.cursor is None:
             try:
-                logging.info("Creating database cursor")
+                logging.debug("Creating database cursor")
                 self.cursor = self.connection.cursor()
             except:
                 logging.error("Unable to create cursor")
                 return False
             try:
-                logging.info("Preparing SELECT statement")
+                logging.debug("Preparing SELECT statement")
                 self.cursor.execute(self.prepared_select_statement)
             except:
                 logging.error("Unable to prepare SELECT statement")
                 return False
             try:
-                logging.info("Preparing INSERT statement")
+                logging.debug("Preparing INSERT statement")
                 self.cursor.execute(self.prepared_insert_statement)
             except:
                 logging.error("Unable to prepare INSERT statement")
@@ -104,7 +104,7 @@ class DomainAccessControllerOnPostgreSql(object):
         logging.debug("Fetched row from SELECT cursor: " + str(row))
         if row is None:
             # First time visit of this website for this user
-            logging.info("User {:s} visits domain {:s} for the first time".format(username, domain))
+            logging.info("User {:s} visits domain {:s} for the first time, allowed".format(username, domain))
             return self.add_domain_to_users_limbo(username, domain)
         else:
             # The domain is in the list for this user
@@ -119,7 +119,7 @@ class DomainAccessControllerOnPostgreSql(object):
 
 class SquidInputParser(object):
     def __init__(self):
-        logging.info("Creating SquidInputParser")
+        logging.debug("Creating SquidInputParser")
         self.requested_url = None
         self.username = None
         self.client_ip = None
@@ -157,7 +157,7 @@ class SquidInputParser(object):
 
 class SquidDatabaseAdapter(object):
     def __init__(self, db_access_controller, redirection_url):
-        logging.info("Creating SquidDatabaseAdapter")
+        logging.debug("Creating SquidDatabaseAdapter")
         self.db_access_controller = db_access_controller
         self.squid_input_parser = SquidInputParser()
         self.redirection_url = redirection_url
@@ -173,15 +173,14 @@ class SquidDatabaseAdapter(object):
         stdout.flush()
 
     def cycle_over_stdin_lines(self):
-        logging.info("Starting garbage collection")
         collected_obj = collect() # Garbage collection to reduce memory before starting cycling
-        logging.info("Collected {:d} objects. Staring cycles on stdin, waiting for Squid input".format(collected_obj))
+        logging.info("{:d} objects cleaned by garbage collector. Staring cycles on stdin, waiting for Squid input".format(collected_obj))
         while True:
             line = stdin.readline()
             logging.debug("Reading line from stdin: {:s}".format(line.strip()))
             if not line:
                 # Terminates execution in case of EOF
-                logging.error("EOF on stdin. Terminating.")
+                logging.warning("EOF on stdin. Terminating.")
                 break
             self.squid_input_parser.parse_squid_input_line(line)
             if self.db_access_controller.open_db_connection_if_closed() == False:
