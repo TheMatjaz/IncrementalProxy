@@ -56,7 +56,6 @@ CREATE INDEX idx_user
 CREATE OR REPLACE VIEW incrementalproxy.vw_users AS 
     SELECT u.username
         ,  u.password
-        ,  u.enabled
         FROM incrementalproxy.users AS u
         WHERE u.enabled = TRUE;
     ;
