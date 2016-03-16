@@ -22,7 +22,8 @@ class DomainAccessControllerOnPostgreSql(object):
         self.db_passwd = db_passwd
         self.prepared_select_statement = select_statement
         self.prepared_insert_statement = insert_statement
-        self.cursor = None
+        self.select_cursor = None
+        self.insert_cursor = None
 
     def open_db_connection_if_closed(self):
         if self.connection is None:
@@ -40,37 +41,39 @@ class DomainAccessControllerOnPostgreSql(object):
             return True
 
     def prepare_statement_if_not_already(self):
-        if self.cursor is None:
+        if self.select_cursor is None:
             try:
-                logging.debug("Creating database cursor")
-                self.cursor = self.connection.cursor()
+                logging.debug("Creating database cursors")
+                self.select_cursor = self.connection.cursor()
+                self.insert_cursor = self.connection.cursor()
             except:
-                logging.error("Unable to create cursor")
+                logging.error("Unable to create cursors")
                 return False
             try:
                 logging.debug("Preparing SELECT statement")
-                self.cursor.execute(self.prepared_select_statement)
+                self.select_cursor.execute(self.prepared_select_statement)
             except:
                 logging.error("Unable to prepare SELECT statement")
                 return False
             try:
                 logging.debug("Preparing INSERT statement")
-                self.cursor.execute(self.prepared_insert_statement)
+                self.insert_cursor.execute(self.prepared_insert_statement)
             except:
                 logging.error("Unable to prepare INSERT statement")
                 return False
             return True
         else:
-            logging.debug("Cursor existing, skipping preparation")
+            logging.debug("Cursors already exist, skipping preparation")
             return True
     
     def close_db_connection_if_open(self):
         if self.connection is not None:
             logging.info("Closing database connection")
             try:
-                self.cursor.close()
+                self.select_cursor.close()
+                self.insert_cursor.close()
             except:
-                logging.error("Unable to close cursor")
+                logging.error("Unable to close cursors")
                 return False
             try:
                 self.connection.close()
@@ -86,7 +89,7 @@ class DomainAccessControllerOnPostgreSql(object):
         try:
             logging.debug("Executing prepared INSERT statement for user {:s} and domain {:s}".format(username, domain))
             execute_insert_statement_string = "EXECUTE insert_new_domain_for_user(%s, %s);"
-            self.cursor.execute(execute_insert_statement_string, (username, domain))
+            self.insert_cursor.execute(execute_insert_statement_string, (username, domain))
             return True
         except:
             logging.error("Unable to execute prepared INSERT statement")
@@ -96,15 +99,15 @@ class DomainAccessControllerOnPostgreSql(object):
         try:
             logging.debug("Executing prepared SELECT statement for user {:s} and domain {:s}".format(username, domain))
             execute_select_statement_string = "EXECUTE status_for_user_on_domain (%s, %s);"
-            self.cursor.execute(execute_select_statement_string, (username, domain))
+            self.select_cursor.execute(execute_select_statement_string, (username, domain))
         except:
             logging.error("Unable to execute prepared SELECT statement")
             return False
-        row = self.cursor.fetchone()
+        row = self.select_cursor.fetchone()
         logging.debug("Fetched row from SELECT cursor: " + str(row))
         if row is None:
             # First time visit of this website for this user
-            logging.info("User {:s} visits domain {:s} for the first time, allowed".format(username, domain))
+            logging.info("User {:s} visits domain {:s} for the first time: adding entry with limbo status".format(username, domain))
             return self.add_domain_to_users_limbo(username, domain)
         else:
             # The domain is in the list for this user
