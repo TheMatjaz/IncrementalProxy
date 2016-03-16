@@ -2,15 +2,6 @@
 
 BEGIN;
 
-DROP ROLE IF EXISTS squid;
-CREATE ROLE squid 
-    WITH LOGIN 
-    ENCRYPTED PASSWORD 'squidpostgresqlpw';
-
-DROP ROLE IF EXISTS squid_admin;
-CREATE ROLE squid_admin
-    WITH LOGIN
-    ENCRYPTED PASSWORD 'squidadminpostgresqlpw';
 
 CREATE SCHEMA IF NOT EXISTS incrementalproxy
     AUTHORIZATION squid_admin;
