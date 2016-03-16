@@ -81,7 +81,7 @@ class DomainAccessControllerOnPostgreSql(object):
     def is_user_allowed_to_domain(self, username, domain):
         try:
             logging.debug("Executing prepared statement for user {:s} and domain {:s}".format(username, domain))
-            execute_statement = "EXECUTE user_domain_select (%s, %s);"
+            execute_statement = "EXECUTE status_for_user_on_domain (%s, %s);"
             self.prepared_cursor.execute(execute_statement, (username, domain))
         except:
             self.error_string = "Unable to execute prepared statement"
@@ -230,7 +230,7 @@ def main():
     logging.info("Starting db_blacklist_helper.py")
     logging.info("Setting debug level to {:s}".format(args.loglevel.upper()))
     logging.debug("Line arguments are: " + str(args))
-    prepared_statement = "PREPARE user_domain_select (text, text) AS SELECT TRUE FROM {:s} WHERE {:s} = $1 AND $2 LIKE {:s};".format(args.db_table, args.col_username, args.col_domain)
+    prepared_statement = "PREPARE status_for_user_on_domain (text, text) AS SELECT status FROM {:s} WHERE {:s} = $1 AND {:s} = $2;".format(args.db_table, args.col_username, args.col_domain)
     logging.info("Prepared statement string {:s}".format(prepared_statement))
     db_access_controller = DomainAccessControllerOnPostgreSql(args.db_host, args.db_name, args.db_user, args.db_password, prepared_statement)
     squid_db_adapter = SquidDatabaseAdapter(db_access_controller, args.redirection_url)

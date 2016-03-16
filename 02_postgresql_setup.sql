@@ -58,6 +58,10 @@ CREATE TABLE incrementalproxy.domains (
         CHECK (NOT incrementalproxy.is_empty(domain))
     );
 
+CREATE INDEX idx_domain
+    ON incrementalproxy.domains(domain)
+    USING btree;
+
 GRANT SELECT, INSERT, UPDATE
     ON incrementalproxy.domains
     TO squid;
