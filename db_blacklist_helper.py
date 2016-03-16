@@ -31,6 +31,7 @@ class DomainAccessControllerOnPostgreSql(object):
             try:
                 logging.info("Creating connection to database")
                 self.connection = psycopg2.connect(db_connect_string)
+                self.connection.set_session(autocommit = True)
             except:
                 logging.error("Unable to connect to the database " + db_connect_string)
                 self.connection = None # is this necessary? Just to be sure?
