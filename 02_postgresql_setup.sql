@@ -64,8 +64,7 @@ GRANT SELECT, INSERT, UPDATE
 
 DROP TYPE IF EXISTS incrementalproxy.enum_domain_status CASCADE;
 CREATE TYPE incrementalproxy.enum_domain_status AS ENUM (
-    'never seen'
-  , 'limbo'
+    'limbo'
   , 'allowed'
   , 'denied'
     );
@@ -75,7 +74,7 @@ CREATE TABLE incrementalproxy.domains_per_user (
     id           serial             NOT NULL
   , fk_id_user   smallint           NOT NULL
   , fk_id_domain integer            NOT NULL
-  , status       incrementalproxy.enum_domain_status DEFAULT 'never seen'
+  , status       incrementalproxy.enum_domain_status DEFAULT 'limbo'
 
   , PRIMARY KEY (id)
   , FOREIGN KEY (fk_id_user)
