@@ -6,8 +6,16 @@ CREATE ROLE squid
     WITH LOGIN 
     ENCRYPTED PASSWORD 'squidpostgresqlpw';
 
+CREATE ROLE squid_admin
+    WITH LOGIN
+    ENCRYPTED PASSWORD 'squidadminpostgresqlpw';
+
 CREATE SCHEMA IF NOT EXISTS incrementalproxy
-    AUTHORIZATION squid;
+    AUTHORIZATION squid_admin;
+
+GRANT USAGE
+    ON SCHEMA incrementalproxy
+    TO squid;
 
 -- Set the pg_hba.conf file to allow only localhost connections from 
 -- the squid user: 
@@ -43,6 +51,7 @@ CREATE TABLE incrementalproxy.users (
 CREATE INDEX idx_user 
     ON incrementalproxy.users(username);
 
+-- Neede for BASIC authentication
 GRANT SELECT
     ON incrementalproxy.users
     TO squid;
@@ -59,12 +68,11 @@ CREATE TABLE incrementalproxy.domains (
     );
 
 CREATE INDEX idx_domain
-    ON incrementalproxy.domains(domain)
-    USING btree;
+    ON incrementalproxy.domains(domain);
 
-GRANT SELECT, INSERT, UPDATE
-    ON incrementalproxy.domains
-    TO squid;
+--GRANT SELECT, INSERT, UPDATE
+--    ON incrementalproxy.domains
+--    TO squid;
 
 DROP TYPE IF EXISTS incrementalproxy.enum_domain_status CASCADE;
 CREATE TYPE incrementalproxy.enum_domain_status AS ENUM (
@@ -91,9 +99,9 @@ CREATE TABLE incrementalproxy.domains_per_user (
         ON DELETE CASCADE
     );
 
-GRANT SELECT, INSERT, UPDATE, DELETE
-    ON incrementalproxy.domains
-    TO squid;
+--GRANT SELECT, INSERT, UPDATE
+--    ON incrementalproxy.domains
+--    TO squid;
 
 CREATE OR REPLACE VIEW incrementalproxy.vw_domains_per_user AS 
     SELECT dpu.id
@@ -149,7 +157,7 @@ CREATE OR REPLACE RULE delete_domains_for_user
             ;
     );
 
-GRANT SELECT, INSERT, UPDATE, DELETE
+GRANT SELECT, INSERT
     ON incrementalproxy.vw_domains_per_user
     TO squid;
 
