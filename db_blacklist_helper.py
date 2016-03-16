@@ -13,15 +13,16 @@ import logging
 
 
 class DomainAccessControllerOnPostgreSql(object):
-    def __init__(self, db_host, db_name, db_user, db_passwd, statement):
+    def __init__(self, db_host, db_name, db_user, db_passwd, select_statement, insert_statement):
         logging.info("Creating DomainAccessControllerOnPostgreSql")
         self.connection = None
         self.db_host = db_host
         self.db_name = db_name
         self.db_user = db_user
         self.db_passwd = db_passwd
-        self.prepared_statement = statement
-        self.prepared_cursor = None
+        self.prepared_select_statement = select_statement
+        self.prepared_insert_statement = insert_statement
+        self.cursor = None
         self.error_string = None
 
     def open_db_connection_if_closed(self):
@@ -40,18 +41,24 @@ class DomainAccessControllerOnPostgreSql(object):
             return True
 
     def prepare_statement_if_not_already(self):
-        if self.prepared_cursor is None:
+        if self.cursor is None:
             try:
                 logging.info("Creating database cursor")
-                self.prepared_cursor = self.connection.cursor()
+                self.cursor = self.connection.cursor()
             except:
                 self.error_string = "Unable to create cursor"
                 return False
             try:
                 logging.info("Preparing SELECT statement")
-                self.prepared_cursor.execute(self.prepared_statement)
+                self.cursor.execute(self.prepared_select_statement)
             except:
-                self.error_string = "Unable to prepare statement"
+                self.error_string = "Unable to prepare SELECT statement"
+                return False
+            try:
+                logging.info("Preparing INSERT statement")
+                self.cursor.execute(self.prepared_insert_statement)
+            except:
+                self.error_string = "Unable to prepare INSERT statement"
                 return False
             return True
         else:
@@ -62,16 +69,14 @@ class DomainAccessControllerOnPostgreSql(object):
         if self.connection is not None:
             logging.info("Closing database connection")
             try:
-                self.prepared_cursor.close()
+                self.cursor.close()
             except:
-                self.error_string = "Unable to close prepared cursor"
-                self.prepared_cursor = None
+                self.error_string = "Unable to close cursor"
                 return False
             try:
                 self.connection.close()
             except:
                 self.error_string = "Unable to close connection"
-                self.connection = None
                 return False
             return True
         else:
@@ -176,7 +181,7 @@ class SquidDatabaseAdapter(object):
                 logging.error("Allowing user to domain anyways")
                 self.allow_user() # in case of DB error, let user access any siteparse_squid_input_line(line)
                 continue
-            if self.db_access_controller.is_user_allowed_to_domain(self.squid_input_parser.username, self.squid_input_parser.requested_domain):    
+            if self.db_access_controller.is_user_allowed_to_domain(self.squid_input_parser.username, self.squid_input_parser.requested_domain):
                 self.allow_user()
             else:
                 self.redirect_user()
@@ -230,9 +235,11 @@ def main():
     logging.info("Starting db_blacklist_helper.py")
     logging.info("Setting debug level to {:s}".format(args.loglevel.upper()))
     logging.debug("Line arguments are: " + str(args))
-    prepared_statement = "PREPARE status_for_user_on_domain (text, text) AS SELECT status FROM {:s} WHERE {:s} = $1 AND {:s} = $2;".format(args.db_table, args.col_username, args.col_domain)
-    logging.info("Prepared statement string {:s}".format(prepared_statement))
-    db_access_controller = DomainAccessControllerOnPostgreSql(args.db_host, args.db_name, args.db_user, args.db_password, prepared_statement)
+    prepared_select_statement = "PREPARE status_for_user_on_domain (text, text) AS SELECT status FROM {:s} WHERE {:s} = $1 AND {:s} = $2;".format(args.db_table, args.col_username, args.col_domain)
+    logging.info("Prepared select statement string {:s}".format(prepared_select_statement))
+    prepared_insert_statement = "PREPARE insert_new_domain_for_user (text, text) AS INSERT INTO incrementalproxy.vw_domains_per_user ({:s}, {:s}) VALUES ($1, $2);".format(args.col_username, args.col_domain)
+    logging.info("Prepared insert statement string {:s}".format(prepared_insert_statement))
+    db_access_controller = DomainAccessControllerOnPostgreSql(args.db_host, args.db_name, args.db_user, args.db_password, prepared_select_statement, prepared_insert_statement)
     squid_db_adapter = SquidDatabaseAdapter(db_access_controller, args.redirection_url)
     squid_db_adapter.cycle_over_stdin_lines()
 
