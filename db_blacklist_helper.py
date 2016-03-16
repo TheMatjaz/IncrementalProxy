@@ -23,7 +23,6 @@ class DomainAccessControllerOnPostgreSql(object):
         self.prepared_select_statement = select_statement
         self.prepared_insert_statement = insert_statement
         self.cursor = None
-        self.error_string = None
 
     def open_db_connection_if_closed(self):
         if self.connection is None:
@@ -32,7 +31,7 @@ class DomainAccessControllerOnPostgreSql(object):
                 logging.info("Creating connection to database")
                 self.connection = psycopg2.connect(db_connect_string)
             except:
-                self.error_string = "Unable to connect to the database " + db_connect_string
+                logging.error("Unable to connect to the database " + db_connect_string)
                 self.connection = None # is this necessary? Just to be sure?
                 return False
             return True
@@ -46,19 +45,19 @@ class DomainAccessControllerOnPostgreSql(object):
                 logging.info("Creating database cursor")
                 self.cursor = self.connection.cursor()
             except:
-                self.error_string = "Unable to create cursor"
+                logging.error("Unable to create cursor")
                 return False
             try:
                 logging.info("Preparing SELECT statement")
                 self.cursor.execute(self.prepared_select_statement)
             except:
-                self.error_string = "Unable to prepare SELECT statement"
+                logging.error("Unable to prepare SELECT statement")
                 return False
             try:
                 logging.info("Preparing INSERT statement")
                 self.cursor.execute(self.prepared_insert_statement)
             except:
-                self.error_string = "Unable to prepare INSERT statement"
+                logging.error("Unable to prepare INSERT statement")
                 return False
             return True
         else:
@@ -71,12 +70,12 @@ class DomainAccessControllerOnPostgreSql(object):
             try:
                 self.cursor.close()
             except:
-                self.error_string = "Unable to close cursor"
+                logging.error("Unable to close cursor")
                 return False
             try:
                 self.connection.close()
             except:
-                self.error_string = "Unable to close connection"
+                logging.error("Unable to close connection")
                 return False
             return True
         else:
@@ -86,11 +85,10 @@ class DomainAccessControllerOnPostgreSql(object):
     def add_domain_to_users_limbo(self, username, domain):
         try:
             logging.debug("Executing prepared INSERT statement for user {:s} and domain {:s}".format(username, domain))
-            execute_insert_statement_string = "EXECUTE insert_new_domain_for_user (%s, %s);"
+            execute_insert_statement_string = "EXECUTE insert_new_domain_for_user(%s, %s);"
             self.cursor.execute(execute_insert_statement_string, (username, domain))
             return True
         except:
-            self.error_string = "Unable to execute prepared INSERT statement"
             logging.error("Unable to execute prepared INSERT statement")
             return False
 
@@ -100,7 +98,7 @@ class DomainAccessControllerOnPostgreSql(object):
             execute_select_statement_string = "EXECUTE status_for_user_on_domain (%s, %s);"
             self.cursor.execute(execute_select_statement_string, (username, domain))
         except:
-            self.error_string = "Unable to execute prepared SELECT statement"
+            logging.error("Unable to execute prepared SELECT statement")
             return False
         row = self.cursor.fetchone()
         logging.debug("Fetched row from SELECT cursor: " + str(row))
@@ -187,12 +185,10 @@ class SquidDatabaseAdapter(object):
                 break
             self.squid_input_parser.parse_squid_input_line(line)
             if self.db_access_controller.open_db_connection_if_closed() == False:
-                logging.error(self.db_access_controller.error_string)
                 logging.error("Allowing user to domain anyways")
                 self.allow_user() # in case of DB error, let user access any siteparse_squid_input_line(line)
                 continue
             if self.db_access_controller.prepare_statement_if_not_already() == False:
-                logging.error(self.db_access_controller.error_string)
                 logging.error("Allowing user to domain anyways")
                 self.allow_user() # in case of DB error, let user access any siteparse_squid_input_line(line)
                 continue
@@ -200,8 +196,7 @@ class SquidDatabaseAdapter(object):
                 self.allow_user()
             else:
                 self.redirect_user()
-        if self.db_access_controller.close_db_connection_if_open() == False:
-            logging.error(self.db_access_controller.error_string)
+        self.db_access_controller.close_db_connection_if_open()
                 
 
 def parse_command_line_arguments():
