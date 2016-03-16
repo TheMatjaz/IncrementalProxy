@@ -145,5 +145,9 @@ CREATE OR REPLACE RULE delete_domains_from_vw
             ;
     );
 
+GRANT SELECT, INSERT, UPDATE, DELETE
+    ON incrementalproxy.vw_domains_per_user
+    TO squid;
+
 --ROLLBACK;
 COMMIT;
