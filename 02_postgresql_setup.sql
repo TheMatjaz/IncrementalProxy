@@ -51,7 +51,7 @@ CREATE TABLE incrementalproxy.users (
 CREATE INDEX idx_user 
     ON incrementalproxy.users(username);
 
--- Neede for BASIC authentication
+-- Needed for BASIC authentication
 GRANT SELECT
     ON incrementalproxy.users
     TO squid;
@@ -69,10 +69,6 @@ CREATE TABLE incrementalproxy.domains (
 
 CREATE INDEX idx_domain
     ON incrementalproxy.domains(domain);
-
---GRANT SELECT, INSERT, UPDATE
---    ON incrementalproxy.domains
---    TO squid;
 
 DROP TYPE IF EXISTS incrementalproxy.enum_domain_status CASCADE;
 CREATE TYPE incrementalproxy.enum_domain_status AS ENUM (
@@ -98,10 +94,6 @@ CREATE TABLE incrementalproxy.domains_per_user (
         ON UPDATE CASCADE
         ON DELETE CASCADE
     );
-
---GRANT SELECT, INSERT, UPDATE
---    ON incrementalproxy.domains
---    TO squid;
 
 CREATE OR REPLACE VIEW incrementalproxy.vw_domains_per_user AS 
     SELECT dpu.id
