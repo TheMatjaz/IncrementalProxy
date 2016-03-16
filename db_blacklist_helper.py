@@ -83,25 +83,40 @@ class DomainAccessControllerOnPostgreSql(object):
             logging.debug("Database connection already closed, skipping")
             return True
 
+    def add_domain_to_users_limbo(self, username, domain):
+        try:
+            logging.debug("Executing prepared INSERT statement for user {:s} and domain {:s}".format(username, domain))
+            execute_insert_statement_string = "EXECUTE insert_new_domain_for_user (%s, %s);"
+            self.cursor.execute(execute_insert_statement_string, (username, domain))
+            return True
+        except:
+            self.error_string = "Unable to execute prepared INSERT statement"
+            logging.error("Unable to execute prepared INSERT statement")
+            return False
+
     def is_user_allowed_to_domain(self, username, domain):
         try:
-            logging.debug("Executing prepared statement for user {:s} and domain {:s}".format(username, domain))
-            execute_statement = "EXECUTE status_for_user_on_domain (%s, %s);"
-            self.prepared_cursor.execute(execute_statement, (username, domain))
+            logging.debug("Executing prepared SELECT statement for user {:s} and domain {:s}".format(username, domain))
+            execute_select_statement_string = "EXECUTE status_for_user_on_domain (%s, %s);"
+            self.cursor.execute(execute_select_statement_string, (username, domain))
         except:
-            self.error_string = "Unable to execute prepared statement"
+            self.error_string = "Unable to execute prepared SELECT statement"
             return False
-        row = self.prepared_cursor.fetchone()
-        logging.debug("Fetched row from cursor: " + str(row))
-        if row is not None:
-            # The domain is in the blacklist for this user
-            logging.info("User {:s} is NOT allowed to domain {:s}".format(username, domain))
-            self.error_string = "User is not allowed to this domain"
-            return False
+        row = self.cursor.fetchone()
+        logging.debug("Fetched row from SELECT cursor: " + str(row))
+        if row is None:
+            # First time visit of this website for this user
+            logging.info("User {:s} visits domain {:s} for the first time".format(username, domain))
+            return self.add_domain_to_users_limbo(username, domain)
         else:
-            # User is allowed
-            logging.info("User {:s} is allowed to domain {:s}".format(username, domain))
-            return True
+            # The domain is in the list for this user
+            status = row[0]
+            if status == "denied":
+                logging.info("User {:s} is NOT allowed to domain {:s}".format(username, domain))
+                return False
+            else:
+                logging.info("User {:s} is allowed to domain {:s}".format(username, domain))
+                return True
 
 
 class SquidInputParser(object):
