@@ -118,30 +118,42 @@ class SquidInputParser(object):
             # Happens if the url has no protocol
             # example: "facebook.com:443"
             return parse_result.path.split(':', 1)[0]
+    
 
+class SquidDatabaseAdapter(object):
+    def __init__(self, db_access_controller, redirection_url):
+        self.db_access_controller = db_access_controller
+        self.squid_input_parser = SquidInputParser()
+        self.redirection_url = redirection_url
 
-def cycle_over_stdin_lines(controller):
-    collect() # Garbage collection to reduce memory before starting
-    while True:
-        line = stdin.readline()
-        if not line:
-            # EOF
-            break
-        if controller.open_db_connection_if_closed() == False:
-            stdout.write(controller.error_string + "\n")
-            stdout.flush()
-            continue
-        if controller.prepare_statement_if_not_already() == False:
-            stdout.write(controller.error_string + "\n")
-            stdout.flush()
-            continue
-        domain, username = extract_domain_and_username_from_line(line)
-        if controller.is_user_allowed_to_domain(username, domain):
-            stdout.write("OK\n")
-            stdout.flush()
-        else:
-            stdout.write(controller.error_string + "\n")
-            stdout.flush()
+    def allow_user(self):
+        stdout.write("\n")
+        stdout.flush()
+
+    def redirect_user(self):
+        stdout.write(self.redirection_url + "\n")
+        stdout.flush()
+
+    def cycle_over_stdin_lines(self):
+        collect() # Garbage collection to reduce memory before starting cycling
+        while True:
+            line = stdin.readline()
+            if not line:
+                # Terminates execution in case of EOF
+                break
+            self.squid_input_parser.parse_squid_input_line(line)
+            if db_access_controller.open_db_connection_if_closed() == False:
+                allow_user() # in case of DB error, let user access any siteparse_squid_input_line(line)
+                continue
+            if db_access_controller.prepare_statement_if_not_already() == False:
+                allow_user() # in case of DB error, let user access any siteparse_squid_input_line(line)
+                continue
+            if db_access_controller.is_user_allowed_to_domain(self.squid_input_parser.username, self.squid_input_parser.requested_domain):
+                allow_user()
+            else:
+                redirect_user()
+        if controller.close_db_connection_if_open() == False:
+                
 
 def parse_command_line_arguments():
     this_program_description = """\
