@@ -145,10 +145,15 @@ GRANT SELECT, INSERT
     ON incrementalproxy.vw_domains_per_user
     TO squid;
 
-GRANT USAGE,SELECT
+GRANT USAGE, SELECT
     ON ALL SEQUENCES
     IN SCHEMA incrementalproxy
     TO squid;
+
+GRANT USAGE, SELECT, INSERT, UPDATE, DELETE
+    ON ALL TABLES
+    IN SCHEMA incrementalproxy
+    TO squid_admin;
 
 --ROLLBACK;
 COMMIT;
