@@ -170,7 +170,7 @@ GRANT USAGE, SELECT
     IN SCHEMA incrementalproxy
     TO squid;
 
-GRANT USAGE, SELECT, INSERT, UPDATE, DELETE
+GRANT SELECT, INSERT, UPDATE, DELETE
     ON ALL TABLES
     IN SCHEMA incrementalproxy
     TO squid_admin;
