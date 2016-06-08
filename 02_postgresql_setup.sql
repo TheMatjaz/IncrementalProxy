@@ -100,7 +100,8 @@ CREATE TABLE incrementalproxy.domains_per_user (
 
 
 CREATE OR REPLACE VIEW incrementalproxy.vw_domains_per_user AS 
-    SELECT u.username
+    SELECT dpu.id
+        ,  u.username
         ,  d.domain
         ,  dpu.status
         FROM incrementalproxy.domains_per_user AS dpu
