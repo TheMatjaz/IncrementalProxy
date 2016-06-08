@@ -138,6 +138,25 @@ CREATE TRIGGER tg_on_insert_vw_domains_per_user
     FOR EACH ROW
     EXECUTE PROCEDURE incrementalproxy.tgfun_insert_domain_for_user();
 
+
+CREATE OR REPLACE FUNCTION incrementalproxy.tgfun_update_domain_permission_per_user()
+    RETURNS TRIGGER
+    LANGUAGE plpgsql
+    AS $body$
+    BEGIN
+        UPDATE incrementalproxy.domains_per_user
+          SET status = NEW.status
+          WHERE id = OLD.id;
+        RETURN NEW;
+    END;
+    $body$;
+
+CREATE TRIGGER tg_on_update_status_vw_domains_per_user
+    INSTEAD OF UPDATE
+    ON incrementalproxy.vw_domains_per_user
+    FOR EACH ROW
+    EXECUTE PROCEDURE incrementalproxy.tgfun_update_domain_permission_per_user();
+
 --GRANT EXECUTE
 --    ON FUNCTION incrementalproxy.tgfun_insert_domain_for_user()
 --    TO squid;
