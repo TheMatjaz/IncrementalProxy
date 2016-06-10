@@ -232,14 +232,13 @@ CREATE TRIGGER tg_on_insert_vw_domain_unlocks
 
 
 CREATE OR REPLACE FUNCTION incrementalproxy.is_allowed_to_domain(par_username text, par_domain text)
-    RETURNS RECORD
+    RETURNS text
     LANGUAGE plpgsql
     SECURITY DEFINER
     AS $body$
     DECLARE
         var_status text;
         var_unlock_end timestamptz;
-        returnable RECORD;
     BEGIN
         SELECT status, unlock_end
         INTO var_status, var_unlock_end
@@ -247,25 +246,24 @@ CREATE OR REPLACE FUNCTION incrementalproxy.is_allowed_to_domain(par_username te
         WHERE username = par_username
             AND domain = par_domain;
         IF var_status = 'banned' THEN
-            SELECT FALSE, 'banned forever on this domain' INTO returnable;
+            RETURN 'banned';
         ELSIF var_status = 'denied' AND var_unlock_end IS NULL THEN
-            SELECT FALSE, 'forbidden domain' INTO returnable;
+            RETURN 'denied';
         ELSIF var_status = 'denied' AND var_unlock_end IS NOT NULL THEN
             IF var_unlock_end > current_timestamp THEN
-                SELECT TRUE, 'unlocked temporarly' INTO returnable;
+                RETURN 'unlocked';
             ELSE
-                SELECT FALSE, 'temporary unlock expired' INTO returnable;
+                RETURN 'expired';
             END IF;
         ELSIF var_status = 'limbo' THEN
-            SELECT TRUE, 'allowed but pending for approval' INTO returnable;
+            RETURN 'limbo';
         ELSIF var_status = 'allowed' THEN
-            SELECT TRUE, 'allowed permanently' INTO returnable;
+            RETURN 'allowed';
         ELSIF var_status IS NULL THEN
-            SELECT TRUE, 'first visit: allowed' INTO returnable;
+            RETURN 'first';
         ELSE
-            SELECT TRUE, 'internal error: allowed' INTO returnable;
+            RETURN 'error';
         END IF;
-        RETURN returnable;
     END;
     $body$;
 

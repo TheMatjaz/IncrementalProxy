@@ -110,18 +110,17 @@ class DomainAccessControllerOnPostgreSql(object):
             # Internal error
             logging.error("Fetched row is empty for unknown reasons")
         else:
-            is_allowed = row[0]
-            reason = row[1]
-            # The domain is in the list for this user
-            if is_allowed == False:
-                logging.info("User {:s} is NOT allowed to domain {:s}. Reason: {:s}".format(username, domain, reason))
-                return False
-            else:
-                logging.info("User {:s} is allowed to domain {:s}. Reason: {:s}".format(username, domain, reason))
-                if reason = 'first visit: allowed':
-                    # First time visit of this website for this user
-                    return self.add_domain_to_users_limbo(username, domain)
+            response = row[0]
+            if response == 'allowed' or response == 'limbo' or response == 'unlocked' or response == 'error':
+                logging.info("User {:s} is allowed to domain {:s}. Reason: {:s}".format(username, domain, response))
                 return True
+            elif response == 'first':
+                logging.info("User {:s} is allowed to domain {:s}. Reason: {:s}".format(username, domain, response))
+                 # First time visit of this website for this user
+                 return self.add_domain_to_users_limbo(username, domain)
+            else:
+                 logging.info("User {:s} is NOT allowed to domain {:s}. Reason: {:s}".format(username, domain, response))
+                 return False
 
 
 class SquidInputParser(object):
