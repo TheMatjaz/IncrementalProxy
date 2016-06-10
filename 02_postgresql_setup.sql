@@ -158,7 +158,7 @@ CREATE OR REPLACE FUNCTION incrementalproxy.tgfun_insert_domain_for_user()
     BEGIN
         INSERT INTO incrementalproxy.domains
             (domain, a_priori_status) VALUES
-            (NEW.domain, NEW.status)
+            (NEW.domain, DEFAULT)
             ON CONFLICT DO NOTHING
             ;
         INSERT INTO incrementalproxy.domains_per_user (fk_id_user, fk_id_domain, status) VALUES
@@ -205,7 +205,7 @@ CREATE OR REPLACE FUNCTION incrementalproxy.tgfun_insert_domain_unlock()
     BEGIN
         INSERT INTO incrementalproxy.vw_domains_per_user
             (username, domain, status) VALUES
-            (NEW.username, NEW.domain, NEW.status)
+            (NEW.username, NEW.domain, 'denied')
             ON CONFLICT DO NOTHING
             ;
         INSERT INTO incrementalproxy.domain_unlocks (fk_id_domains_per_user, reason, unlock_end) VALUES
