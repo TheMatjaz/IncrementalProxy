@@ -112,8 +112,8 @@ class DomainAccessControllerOnPostgreSql(object):
             return self.add_domain_to_users_limbo(username, domain)
         else:
             # The domain is in the list for this user
-            status = row[0]
-            if status == "denied":
+            is_allowed = row[0]
+            if is_allowed == False:
                 logging.info("User {:s} is NOT allowed to domain {:s}".format(username, domain))
                 return False
             else:
@@ -262,7 +262,7 @@ def setup_logging(args):
     logging.debug("Line arguments are: " + str(args))
 
 def prepare_statements(args):
-    prepared_select_statement = "PREPARE status_for_user_on_domain (text, text) AS SELECT status FROM {:s} WHERE {:s} = $1 AND {:s} = $2;".format(args.db_table, args.col_username, args.col_domain)
+    prepared_select_statement = "PREPARE status_for_user_on_domain (text, text) AS SELECT (status != 'denied' OR (unlock_end IS NOT NULL AND unlock_end > current_timestamp)) FROM {:s} WHERE {:s} = $1 AND {:s} = $2;".format(args.db_table, args.col_username, args.col_domain)
     logging.debug("Prepared select statement string {:s}".format(prepared_select_statement))
     prepared_insert_statement = "PREPARE insert_new_domain_for_user (text, text) AS INSERT INTO incrementalproxy.vw_domains_per_user ({:s}, {:s}, {:s}) VALUES ($1, $2, 'limbo');".format(args.col_username, args.col_domain, args.col_status)
     logging.debug("Prepared insert statement string {:s}".format(prepared_insert_statement))
