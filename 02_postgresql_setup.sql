@@ -99,10 +99,6 @@ CREATE TABLE incrementalproxy.domains_per_user (
         UNIQUE (fk_id_user, fk_id_domain)
     );
 
-CREATE INDEX idx_user_domain
-    ON incrementalproxy.domains_per_user(username, domain);
-
-
 DROP TABLE IF EXISTS incrementalproxy.domain_unlocks CASCADE;
 CREATE TABLE incrementalproxy.domain_unlocks (
     id           serial             NOT NULL
@@ -112,7 +108,7 @@ CREATE TABLE incrementalproxy.domain_unlocks (
   , unlock_end   timestamptz NOT NULL DEFAULT current_timestamp + '1 hour'::interval
 
   , PRIMARY KEY (id)
-  , FOREIGN KEY (fk_id_domain_per_user)
+  , FOREIGN KEY (fk_id_domains_per_user)
         REFERENCES incrementalproxy.domains_per_user(id)
         ON UPDATE CASCADE
         ON DELETE CASCADE
