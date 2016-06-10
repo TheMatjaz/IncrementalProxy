@@ -79,20 +79,14 @@ CREATE TABLE incrementalproxy.domains (
 CREATE INDEX idx_domain
     ON incrementalproxy.domains(domain);
 
-
-DROP TYPE IF EXISTS incrementalproxy.enum_domain_status CASCADE;
-CREATE TYPE incrementalproxy.enum_domain_status AS ENUM (
-    'limbo'
-  , 'allowed'
-  , 'denied'
-    );
-
-DROP TABLE IF EXISTS incrementalproxy.domains_per_user CASCADE;
-CREATE TABLE incrementalproxy.domains_per_user (
+DROP TABLE IF EXISTS incrementalproxy.domain_unlocks CASCADE;
+CREATE TABLE incrementalproxy.domain_unlocks (
     id           serial             NOT NULL
   , fk_id_user   smallint           NOT NULL
   , fk_id_domain integer            NOT NULL
-  , status       incrementalproxy.enum_domain_status NOT NULL DEFAULT 'limbo'
+  , reason       text
+  , unlock_start timestamptz NOT NULL DEFAULT current_timestamp
+  , unlock_end   timestamptz NOT NULL DEFAULT current_timestamp + '1 hour'::interval
 
   , PRIMARY KEY (id)
   , FOREIGN KEY (fk_id_user)
@@ -103,6 +97,33 @@ CREATE TABLE incrementalproxy.domains_per_user (
         REFERENCES incrementalproxy.domains(id)
         ON UPDATE CASCADE
         ON DELETE CASCADE
+  , CONSTRAINT unlock_end_after_start
+        CHECK (unlock_end > unlock_start)
+  , CONSTRAINT unique_user_domain_pair
+        UNIQUE (fk_id_user, fk_id_domain)
+    );
+
+DROP TABLE IF EXISTS incrementalproxy.domains_per_user CASCADE;
+CREATE TABLE incrementalproxy.domains_per_user (
+    id           serial             NOT NULL
+  , fk_id_user   smallint           NOT NULL
+  , fk_id_domain integer            NOT NULL
+  , status       incrementalproxy.enum_domain_status NOT NULL DEFAULT 'limbo'
+  , fk_unlock_end timestamptz
+
+  , PRIMARY KEY (id)
+  , FOREIGN KEY (fk_id_user)
+        REFERENCES incrementalproxy.users(id)
+        ON UPDATE CASCADE  -- When the user id is updated or removed
+        ON DELETE CASCADE  -- update/delete his/her domains as well.
+  , FOREIGN KEY (fk_id_domain)
+        REFERENCES incrementalproxy.domains(id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+  , FOREIGN KEY (fk_unlock_end)
+        REFERENCES incrementalproxy.domain_unlocks(id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE -- do not remove the unlock request when removing a domain from this table
   , CONSTRAINT unique_user_domain_pair
         UNIQUE (fk_id_user, fk_id_domain)
     );
@@ -113,11 +134,14 @@ CREATE OR REPLACE VIEW incrementalproxy.vw_domains_per_user AS
         ,  u.username
         ,  d.domain
         ,  dpu.status
+        ,  un.unlock_endtime
         FROM incrementalproxy.domains_per_user AS dpu
         INNER JOIN incrementalproxy.users AS u
             ON dpu.fk_id_user = u.id
         INNER JOIN incrementalproxy.domains AS d 
             ON dpu.fk_id_domain = d.id
+        LEFT JOIN incrementalproxy.domain_unlocks AS un
+            ON un.fk_id_user = u.id AND un.fk_id_domain = d.id
     ;
 
 CREATE OR REPLACE FUNCTION incrementalproxy.tgfun_insert_domain_for_user()
