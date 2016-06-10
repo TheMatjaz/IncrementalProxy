@@ -100,6 +100,25 @@ CREATE TABLE incrementalproxy.domain_unlocks (
         CHECK (unlock_end > unlock_start)
     );
 
+CREATE OR REPLACE VIEW incrementalproxy.vw_domain_unlocks AS 
+    SELECT du.id
+        ,  u.username
+        ,  d.domain
+        ,  du.reason
+        ,  du.unlock_start
+        ,  du.unlock_end
+        FROM incrementalproxy.domain_unlocks AS du
+        INNER JOIN incrementalproxy.users AS u
+            ON du.fk_id_user = u.id
+        INNER JOIN incrementalproxy.domains AS d 
+            ON du.fk_id_domain = d.id
+    ;
+
+GRANT INSERT
+    ON incrementalproxy.vw_domain_unlocks
+    TO squid;
+
+
 DROP TABLE IF EXISTS incrementalproxy.domains_per_user CASCADE;
 CREATE TABLE incrementalproxy.domains_per_user (
     id           serial             NOT NULL
@@ -140,6 +159,7 @@ CREATE OR REPLACE VIEW incrementalproxy.vw_domains_per_user AS
         LEFT JOIN incrementalproxy.domain_unlocks AS un
             ON dpu.fk_unlock = un.id
     ;
+
 
 CREATE OR REPLACE FUNCTION incrementalproxy.tgfun_insert_domain_for_user()
     RETURNS TRIGGER
@@ -187,6 +207,34 @@ CREATE TRIGGER tg_on_update_status_vw_domains_per_user
     FOR EACH ROW
     EXECUTE PROCEDURE incrementalproxy.tgfun_update_domain_permission_per_user();
 
+
+CREATE OR REPLACE FUNCTION incrementalproxy.tgfun_insert_domain_unlock()
+    RETURNS TRIGGER
+    LANGUAGE plpgsql
+    SECURITY DEFINER
+    AS $body$
+    BEGIN
+        INSERT INTO incrementalproxy.domains
+            (domain) VALUES
+            (NEW.domain)
+            ON CONFLICT DO NOTHING
+            ;
+        INSERT INTO incrementalproxy.domain_unlocks (fk_id_user, fk_id_domain, reason, unlock_end) VALUES
+            ((SELECT id FROM incrementalproxy.users WHERE username = NEW.username)
+              , (SELECT id FROM incrementalproxy.domains WHERE domain = NEW.domain)
+              , NEW.reason
+              , NEW.unlock_end)
+            ON CONFLICT DO NOTHING
+            ;
+        RETURN NEW;
+    END;
+    $body$;
+
+CREATE TRIGGER tg_on_insert_vw_domain_unlocks
+    INSTEAD OF INSERT
+    ON incrementalproxy.vw_domain_unlocks
+    FOR EACH ROW
+    EXECUTE PROCEDURE incrementalproxy.tgfun_insert_domain_unlock();
 
 --GRANT EXECUTE
 --    ON FUNCTION incrementalproxy.tgfun_insert_domain_for_user()
