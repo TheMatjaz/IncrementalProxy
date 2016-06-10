@@ -56,10 +56,19 @@ GRANT SELECT
     ON incrementalproxy.vw_users
     TO squid;
 
+DROP TYPE IF EXISTS incrementalproxy.enum_domain_status CASCADE;
+CREATE TYPE incrementalproxy.enum_domain_status AS ENUM (
+    'limbo'
+  , 'allowed'
+  , 'denied'
+  , 'unlocked'
+    );
+
 DROP TABLE IF EXISTS incrementalproxy.domains CASCADE;
 CREATE TABLE incrementalproxy.domains (
     id      serial NOT NULL
   , domain  text   NOT NULL UNIQUE
+  , a_priori_status enum_domain_status NOT NULL DEFAULT 'allowed'
   , comment text   DEFAULT  NULL
 
   , PRIMARY KEY (id)
