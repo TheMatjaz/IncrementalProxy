@@ -61,6 +61,7 @@ CREATE TYPE incrementalproxy.enum_domain_status AS ENUM (
     'limbo'
   , 'allowed'
   , 'denied'
+  , 'banned'
     );
 
 DROP TABLE IF EXISTS incrementalproxy.domains CASCADE;
@@ -224,9 +225,48 @@ CREATE TRIGGER tg_on_insert_vw_domain_unlocks
     FOR EACH ROW
     EXECUTE PROCEDURE incrementalproxy.tgfun_insert_domain_unlock();
 
---GRANT EXECUTE
---    ON FUNCTION incrementalproxy.tgfun_insert_domain_for_user()
---    TO squid;
+
+CREATE OR REPLACE FUNCTION incrementalproxy.is_allowed_to_domain(par_username text, par_domain text)
+    RETURNS RECORD
+    LANGUAGE plpgsql
+    SECURITY DEFINER
+    AS $body$
+    DECLARE
+        var_status text;
+        var_unlock_end timestamptz;
+        returnable RECORD;
+    BEGIN
+        SELECT status, unlock_end
+        INTO var_status, var_unlock_end
+        FROM incrementalproxy.vw_domains_per_user
+        WHERE username = par_username
+            AND domain = par_domain;
+        IF var_status = 'banned' THEN
+            SELECT FALSE, 'banned forever on this domain' INTO returnable;
+        ELSIF var_status = 'denied' AND var_unlock_end IS NULL THEN
+            SELECT FALSE, 'forbidden domain' INTO returnable;
+        ELSIF var_status = 'denied' AND var_unlock_end IS NOT NULL THEN
+            IF var_unlock_end > current_timestamp THEN
+                SELECT TRUE, 'unlocked temporarly' INTO returnable;
+            ELSE
+                SELECT FALSE, 'temporary unlock expired' INTO returnable;
+            END IF;
+        ELSIF var_status = 'limbo' THEN
+            SELECT TRUE, 'allowed but pending for approval' INTO returnable;
+        ELSIF var_status = 'allowed' THEN
+            SELECT TRUE, 'allowed permanently' INTO returnable;
+        ELSIF var_status IS NULL THEN
+            SELECT TRUE, 'first visit: allowed' INTO returnable;
+        ELSE
+            SELECT TRUE, 'internal error: allowed' INTO returnable;
+        END IF;
+        RETURN returnable;
+    END;
+    $body$;
+
+GRANT EXECUTE
+    ON FUNCTION incrementalproxy.is_allowed_to_domain(text, text)
+    TO squid;
     
 GRANT SELECT, INSERT
     ON incrementalproxy.vw_domains_per_user
