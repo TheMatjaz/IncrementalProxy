@@ -113,8 +113,8 @@ class DomainAccessControllerOnPostgreSql(object):
         else:
             # The domain is in the list for this user
             is_allowed = row[0]
-            logging.debug("row[0] = " + row[0])
-            if !is_allowed:
+            logging.debug("row[0] = " + str(row[0]))
+            if is_allowed == False:
                 logging.info("User {:s} is NOT allowed to domain {:s}".format(username, domain))
                 return False
             else:
