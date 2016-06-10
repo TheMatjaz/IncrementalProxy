@@ -61,7 +61,6 @@ CREATE TYPE incrementalproxy.enum_domain_status AS ENUM (
     'limbo'
   , 'allowed'
   , 'denied'
-  , 'unlocked'
     );
 
 DROP TABLE IF EXISTS incrementalproxy.domains CASCADE;
@@ -151,8 +150,8 @@ CREATE OR REPLACE FUNCTION incrementalproxy.tgfun_insert_domain_for_user()
     AS $body$
     BEGIN
         INSERT INTO incrementalproxy.domains
-            (domain) VALUES
-            (NEW.domain)
+            (domain, a_priori_status) VALUES
+            (NEW.domain, NEW.status)
             ON CONFLICT DO NOTHING
             ;
         INSERT INTO incrementalproxy.domains_per_user (fk_id_user, fk_id_domain, status) VALUES
@@ -189,6 +188,7 @@ CREATE TRIGGER tg_on_update_status_vw_domains_per_user
     ON incrementalproxy.vw_domains_per_user
     FOR EACH ROW
     EXECUTE PROCEDURE incrementalproxy.tgfun_update_domain_permission_per_user();
+
 
 --GRANT EXECUTE
 --    ON FUNCTION incrementalproxy.tgfun_insert_domain_for_user()
