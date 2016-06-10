@@ -78,46 +78,6 @@ CREATE TABLE incrementalproxy.domains (
 CREATE INDEX idx_domain
     ON incrementalproxy.domains(domain);
 
-DROP TABLE IF EXISTS incrementalproxy.domain_unlocks CASCADE;
-CREATE TABLE incrementalproxy.domain_unlocks (
-    id           serial             NOT NULL
-  , fk_id_user   smallint           NOT NULL
-  , fk_id_domain integer            NOT NULL
-  , reason       text
-  , unlock_start timestamptz NOT NULL DEFAULT current_timestamp
-  , unlock_end   timestamptz NOT NULL DEFAULT current_timestamp + '1 hour'::interval
-
-  , PRIMARY KEY (id)
-  , FOREIGN KEY (fk_id_user)
-        REFERENCES incrementalproxy.users(id)
-        ON UPDATE CASCADE  -- When the user id is updated or removed
-        ON DELETE CASCADE  -- update/delete his/her domains as well.
-  , FOREIGN KEY (fk_id_domain)
-        REFERENCES incrementalproxy.domains(id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE
-  , CONSTRAINT unlock_end_after_start
-        CHECK (unlock_end > unlock_start)
-    );
-
-CREATE OR REPLACE VIEW incrementalproxy.vw_domain_unlocks AS 
-    SELECT du.id
-        ,  u.username
-        ,  d.domain
-        ,  du.reason
-        ,  du.unlock_start
-        ,  du.unlock_end
-        FROM incrementalproxy.domain_unlocks AS du
-        INNER JOIN incrementalproxy.users AS u
-            ON du.fk_id_user = u.id
-        INNER JOIN incrementalproxy.domains AS d 
-            ON du.fk_id_domain = d.id
-    ;
-
-GRANT INSERT
-    ON incrementalproxy.vw_domain_unlocks
-    TO squid;
-
 
 DROP TABLE IF EXISTS incrementalproxy.domains_per_user CASCADE;
 CREATE TABLE incrementalproxy.domains_per_user (
@@ -125,7 +85,6 @@ CREATE TABLE incrementalproxy.domains_per_user (
   , fk_id_user   smallint           NOT NULL
   , fk_id_domain integer            NOT NULL
   , status       incrementalproxy.enum_domain_status NOT NULL DEFAULT 'limbo'
-  , fk_unlock    integer
 
   , PRIMARY KEY (id)
   , FOREIGN KEY (fk_id_user)
@@ -136,15 +95,32 @@ CREATE TABLE incrementalproxy.domains_per_user (
         REFERENCES incrementalproxy.domains(id)
         ON UPDATE CASCADE
         ON DELETE CASCADE
-  , FOREIGN KEY (fk_unlock)
-        REFERENCES incrementalproxy.domain_unlocks(id)
-        ON UPDATE CASCADE
-        ON DELETE CASCADE
   , CONSTRAINT unique_user_domain_pair
         UNIQUE (fk_id_user, fk_id_domain)
     );
 
+CREATE INDEX idx_user_domain
+    ON incrementalproxy.domains_per_user(username, domain);
 
+
+DROP TABLE IF EXISTS incrementalproxy.domain_unlocks CASCADE;
+CREATE TABLE incrementalproxy.domain_unlocks (
+    id           serial             NOT NULL
+  , fk_id_domains_per_user integer NOT NULL
+  , reason       text
+  , unlock_start timestamptz NOT NULL DEFAULT current_timestamp
+  , unlock_end   timestamptz NOT NULL DEFAULT current_timestamp + '1 hour'::interval
+
+  , PRIMARY KEY (id)
+  , FOREIGN KEY (fk_id_domain_per_user)
+        REFERENCES incrementalproxy.domains_per_user(id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+  , CONSTRAINT unlock_end_after_start
+        CHECK (unlock_end > unlock_start)
+    );
+
+    
 CREATE OR REPLACE VIEW incrementalproxy.vw_domains_per_user AS 
     SELECT dpu.id
         ,  u.username
@@ -157,8 +133,25 @@ CREATE OR REPLACE VIEW incrementalproxy.vw_domains_per_user AS
         INNER JOIN incrementalproxy.domains AS d 
             ON dpu.fk_id_domain = d.id
         LEFT JOIN incrementalproxy.domain_unlocks AS un
-            ON dpu.fk_unlock = un.id
+            ON dpu.id = un.fk_id_domains_per_user
     ;
+
+CREATE OR REPLACE VIEW incrementalproxy.vw_domain_unlocks AS 
+    SELECT du.id
+        ,  dpu.username
+        ,  dpu.domain
+        ,  dpu.status
+        ,  du.reason
+        ,  du.unlock_start
+        ,  du.unlock_end
+        FROM incrementalproxy.domain_unlocks AS du
+        INNER JOIN incrementalproxy.vw_domains_per_user AS dpu
+            ON dpu.id = du.fk_id_domains_per_user
+    ;
+
+GRANT INSERT
+    ON incrementalproxy.vw_domain_unlocks
+    TO squid;
 
 
 CREATE OR REPLACE FUNCTION incrementalproxy.tgfun_insert_domain_for_user()
@@ -214,14 +207,13 @@ CREATE OR REPLACE FUNCTION incrementalproxy.tgfun_insert_domain_unlock()
     SECURITY DEFINER
     AS $body$
     BEGIN
-        INSERT INTO incrementalproxy.domains
-            (domain) VALUES
-            (NEW.domain)
+        INSERT INTO incrementalproxy.vw_domains_per_user
+            (username, domain, status) VALUES
+            (NEW.username, NEW.domain, NEW.status)
             ON CONFLICT DO NOTHING
             ;
-        INSERT INTO incrementalproxy.domain_unlocks (fk_id_user, fk_id_domain, reason, unlock_end) VALUES
-            ((SELECT id FROM incrementalproxy.users WHERE username = NEW.username)
-              , (SELECT id FROM incrementalproxy.domains WHERE domain = NEW.domain)
+        INSERT INTO incrementalproxy.domain_unlocks (fk_id_domains_per_user, reason, unlock_end) VALUES
+            ((SELECT id FROM incrementalproxy.vw_domains_per_user WHERE username = NEW.username AND domain = NEW.domain)
               , NEW.reason
               , NEW.unlock_end)
             ON CONFLICT DO NOTHING
