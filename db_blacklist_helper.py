@@ -99,7 +99,7 @@ class DomainAccessControllerOnPostgreSql(object):
     def is_user_allowed_to_domain(self, username, domain):
         try:
             logging.debug("Executing prepared SELECT statement for user {:s} and domain {:s}".format(username, domain))
-            execute_select_statement_string = "EXECUTE status_for_user_on_domain (%s, %s);"
+            execute_select_statement_string = "EXECUTE is_allowed (%s, %s);"
             self.select_cursor.execute(execute_select_statement_string, (username, domain))
         except:
             logging.error("Unable to execute prepared SELECT statement")
@@ -107,18 +107,20 @@ class DomainAccessControllerOnPostgreSql(object):
         row = self.select_cursor.fetchone()
         logging.debug("Fetched row from SELECT cursor: " + str(row))
         if row is None:
-            # First time visit of this website for this user
-            logging.info("User {:s} visits domain {:s} for the first time: adding entry with limbo status".format(username, domain))
-            return self.add_domain_to_users_limbo(username, domain)
+            # Internal error
+            logging.error("Fetched row is empty for unknown reasons")
         else:
-            # The domain is in the list for this user
             is_allowed = row[0]
-            logging.debug("row[0] = " + str(row[0]))
+            reason = row[1]
+            # The domain is in the list for this user
             if is_allowed == False:
-                logging.info("User {:s} is NOT allowed to domain {:s}".format(username, domain))
+                logging.info("User {:s} is NOT allowed to domain {:s}. Reason: {:s}".format(username, domain, reason))
                 return False
             else:
-                logging.info("User {:s} is allowed to domain {:s}".format(username, domain))
+                logging.info("User {:s} is allowed to domain {:s}. Reason: {:s}".format(username, domain, reason))
+                if reason = 'first visit: allowed':
+                    # First time visit of this website for this user
+                    return self.add_domain_to_users_limbo(username, domain)
                 return True
 
 
@@ -263,7 +265,7 @@ def setup_logging(args):
     logging.debug("Line arguments are: " + str(args))
 
 def prepare_statements(args):
-    prepared_select_statement = "PREPARE status_for_user_on_domain (text, text) AS SELECT (status != 'denied' OR (unlock_end IS NOT NULL AND unlock_end > current_timestamp)) FROM {:s} WHERE {:s} = $1 AND {:s} = $2;".format(args.db_table, args.col_username, args.col_domain)
+    prepared_select_statement = "PREPARE is_allowed (text, text) AS SELECT incrementalproxy.is_allowed_to_domain($1, $2);"
     logging.debug("Prepared select statement string {:s}".format(prepared_select_statement))
     prepared_insert_statement = "PREPARE insert_new_domain_for_user (text, text) AS INSERT INTO incrementalproxy.vw_domains_per_user ({:s}, {:s}, {:s}) VALUES ($1, $2, 'limbo');".format(args.col_username, args.col_domain, args.col_status)
     logging.debug("Prepared insert statement string {:s}".format(prepared_insert_statement))
