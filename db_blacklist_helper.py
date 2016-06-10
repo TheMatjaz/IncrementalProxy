@@ -116,11 +116,11 @@ class DomainAccessControllerOnPostgreSql(object):
                 return True
             elif response == 'first':
                 logging.info("User {:s} is allowed to domain {:s}. Reason: {:s}".format(username, domain, response))
-                 # First time visit of this website for this user
-                 return self.add_domain_to_users_limbo(username, domain)
+                # First time visit of this website for this user
+                return self.add_domain_to_users_limbo(username, domain)
             else:
-                 logging.info("User {:s} is NOT allowed to domain {:s}. Reason: {:s}".format(username, domain, response))
-                 return False
+                logging.info("User {:s} is NOT allowed to domain {:s}. Reason: {:s}".format(username, domain, response))
+                return False
 
 
 class SquidInputParser(object):
