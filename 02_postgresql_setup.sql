@@ -67,7 +67,7 @@ DROP TABLE IF EXISTS incrementalproxy.domains CASCADE;
 CREATE TABLE incrementalproxy.domains (
     id      serial NOT NULL
   , domain  text   NOT NULL UNIQUE
-  , a_priori_status enum_domain_status NOT NULL DEFAULT 'allowed'
+  , a_priori_status incrementalproxy.enum_domain_status NOT NULL DEFAULT 'allowed'
   , comment text   DEFAULT  NULL
 
   , PRIMARY KEY (id)
@@ -98,8 +98,6 @@ CREATE TABLE incrementalproxy.domain_unlocks (
         ON DELETE CASCADE
   , CONSTRAINT unlock_end_after_start
         CHECK (unlock_end > unlock_start)
-  , CONSTRAINT unique_user_domain_pair
-        UNIQUE (fk_id_user, fk_id_domain)
     );
 
 DROP TABLE IF EXISTS incrementalproxy.domains_per_user CASCADE;
@@ -108,7 +106,7 @@ CREATE TABLE incrementalproxy.domains_per_user (
   , fk_id_user   smallint           NOT NULL
   , fk_id_domain integer            NOT NULL
   , status       incrementalproxy.enum_domain_status NOT NULL DEFAULT 'limbo'
-  , fk_unlock_end timestamptz
+  , fk_unlock    integer
 
   , PRIMARY KEY (id)
   , FOREIGN KEY (fk_id_user)
@@ -119,10 +117,10 @@ CREATE TABLE incrementalproxy.domains_per_user (
         REFERENCES incrementalproxy.domains(id)
         ON UPDATE CASCADE
         ON DELETE CASCADE
-  , FOREIGN KEY (fk_unlock_end)
+  , FOREIGN KEY (fk_unlock)
         REFERENCES incrementalproxy.domain_unlocks(id)
         ON UPDATE CASCADE
-        ON DELETE CASCADE -- do not remove the unlock request when removing a domain from this table
+        ON DELETE CASCADE
   , CONSTRAINT unique_user_domain_pair
         UNIQUE (fk_id_user, fk_id_domain)
     );
@@ -133,14 +131,14 @@ CREATE OR REPLACE VIEW incrementalproxy.vw_domains_per_user AS
         ,  u.username
         ,  d.domain
         ,  dpu.status
-        ,  un.unlock_endtime
+        ,  un.unlock_end
         FROM incrementalproxy.domains_per_user AS dpu
         INNER JOIN incrementalproxy.users AS u
             ON dpu.fk_id_user = u.id
         INNER JOIN incrementalproxy.domains AS d 
             ON dpu.fk_id_domain = d.id
         LEFT JOIN incrementalproxy.domain_unlocks AS un
-            ON un.fk_id_user = u.id AND un.fk_id_domain = d.id
+            ON dpu.fk_unlock = un.id
     ;
 
 CREATE OR REPLACE FUNCTION incrementalproxy.tgfun_insert_domain_for_user()
