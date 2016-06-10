@@ -129,7 +129,12 @@ CREATE OR REPLACE VIEW incrementalproxy.vw_domains_per_user AS
             ON dpu.fk_id_user = u.id
         INNER JOIN incrementalproxy.domains AS d 
             ON dpu.fk_id_domain = d.id
-        LEFT JOIN incrementalproxy.domain_unlocks AS un
+        LEFT JOIN (
+            SELECT fk_id_domains_per_user
+                ,  max(unlock_end) AS unlock_end
+                FROM incrementalproxy.domain_unlocks
+                GROUP BY fk_id_domains_per_user
+            ) AS un
             ON dpu.id = un.fk_id_domains_per_user
     ;
 
