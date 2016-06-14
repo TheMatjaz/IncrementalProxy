@@ -13,7 +13,10 @@ import logging
 
 
 class DomainAccessControllerOnPostgreSql(object):
-    def __init__(self, db_host, db_name, db_user, db_passwd, select_statement, insert_statement):
+    """Keeps an active connection to the given DB, rechecking it at each query 
+    it performs."""
+    def __init__(self, db_host, db_name, db_user, db_passwd, select_statement, 
+                insert_statement):
         logging.debug("Creating DomainAccessControllerOnPostgreSql")
         self.connection = None
         self.db_host = db_host
@@ -161,9 +164,9 @@ class SquidInputParser(object):
             return parse_result.path.split(':', 1)[0]
     
 
-class SquidDatabaseAdapter(object):
+class SquidToThisScriptAdapter(object):
     def __init__(self, db_access_controller, redirection_url):
-        logging.debug("Creating SquidDatabaseAdapter")
+        logging.debug("Creating SquidToThisScriptAdapter")
         self.db_access_controller = db_access_controller
         self.squid_input_parser = SquidInputParser()
         self.redirection_url = redirection_url
@@ -263,7 +266,7 @@ def setup_logging(args):
         logging.warning("Logfile {:s} was not writable. Fallback to {:s}".format(logfile, args.logfile))
     logging.debug("Line arguments are: " + str(args))
 
-def prepare_statements(args):
+def prepare_sql_statements(args):
     prepared_select_statement = "PREPARE is_allowed (text, text) AS SELECT incrementalproxy.is_allowed_to_domain($1, $2);"
     logging.debug("Prepared select statement string {:s}".format(prepared_select_statement))
     prepared_insert_statement = "PREPARE insert_new_domain_for_user (text, text) AS INSERT INTO incrementalproxy.vw_domains_per_user ({:s}, {:s}, {:s}) VALUES ($1, $2, 'limbo');".format(args.col_username, args.col_domain, args.col_status)
@@ -273,9 +276,9 @@ def prepare_statements(args):
 def main():
     args = parse_command_line_arguments()
     setup_logging(args)
-    prepared_select_statement, prepared_insert_statement = prepare_statements(args)
+    prepared_select_statement, prepared_insert_statement = prepare_sql_statements(args)
     db_access_controller = DomainAccessControllerOnPostgreSql(args.db_host, args.db_name, args.db_user, args.db_password, prepared_select_statement, prepared_insert_statement)
-    squid_db_adapter = SquidDatabaseAdapter(db_access_controller, args.redirection_url)
+    squid_db_adapter = SquidToThisScriptAdapter(db_access_controller, args.redirection_url)
     squid_db_adapter.cycle_over_stdin_lines()
 
 if __name__ == "__main__":
