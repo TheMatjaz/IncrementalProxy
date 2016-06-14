@@ -1,4 +1,0 @@
-.units.it
-.google.com
-.wikipedia.org
-.matjaz.it
