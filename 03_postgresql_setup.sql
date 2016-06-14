@@ -2,9 +2,9 @@ DELETE FROM incrementalproxy.users;
 DELETE FROM incrementalproxy.domains;
 
 INSERT INTO incrementalproxy.users (username, password, fullname, comment) VALUES
-   ('gustin', 'pwgustin', 'Matjaž Guštin', 'Admin')
-  , ('davanzo', 'UnaPasswordACaso', 'Giorgio Davanzo', 'Professore')
-  , ('jaka', 'thebestpasswordevar', 'Jaka Cikač', 'Beta tester')
+   ('gustin', 'pwgustin', 'M. Guštin', 'Admin')
+  , ('davanzo', 'UnaPasswordACaso', 'G. Davanzo', 'Professore')
+  , ('jaka', 'thebestpasswordevar', 'Jaka', 'Beta tester')
     ;
 
 INSERT INTO incrementalproxy.domains(domain, a_priori_status) VALUES
