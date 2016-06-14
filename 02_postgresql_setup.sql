@@ -1,7 +1,4 @@
--- postgresql_setup.sql
-
 BEGIN;
-
 
 CREATE SCHEMA IF NOT EXISTS incrementalproxy
     AUTHORIZATION squid_admin;
@@ -10,9 +7,10 @@ GRANT USAGE
     ON SCHEMA incrementalproxy
     TO squid;
 
--- Set the pg_hba.conf file to allow only localhost connections from 
--- the squid user: 
+-- Remember to set the pg_hba.conf file to allow only localhost connections from
+-- the squid user:
 -- http://www.postgresql.org/docs/current/static/auth-pg-hba-conf.html
+
 
 CREATE OR REPLACE FUNCTION incrementalproxy.is_empty(string text)
     RETURNS BOOLEAN
@@ -22,6 +20,7 @@ CREATE OR REPLACE FUNCTION incrementalproxy.is_empty(string text)
     AS $body$
         SELECT string ~ '^[[:space:]]*$';
     $body$;
+
 
 DROP TABLE IF EXISTS incrementalproxy.users CASCADE;
 CREATE TABLE incrementalproxy.users (
@@ -56,6 +55,8 @@ GRANT SELECT
     ON incrementalproxy.vw_users
     TO squid;
 
+
+
 DROP TYPE IF EXISTS incrementalproxy.enum_domain_status CASCADE;
 CREATE TYPE incrementalproxy.enum_domain_status AS ENUM (
     'limbo'
@@ -80,6 +81,7 @@ CREATE INDEX idx_domain
     ON incrementalproxy.domains(domain);
 
 
+
 DROP TABLE IF EXISTS incrementalproxy.domains_per_user CASCADE;
 CREATE TABLE incrementalproxy.domains_per_user (
     id           serial             NOT NULL
@@ -100,6 +102,8 @@ CREATE TABLE incrementalproxy.domains_per_user (
         UNIQUE (fk_id_user, fk_id_domain)
     );
 
+
+
 DROP TABLE IF EXISTS incrementalproxy.domain_unlocks CASCADE;
 CREATE TABLE incrementalproxy.domain_unlocks (
     id           serial             NOT NULL
@@ -116,6 +120,7 @@ CREATE TABLE incrementalproxy.domain_unlocks (
   , CONSTRAINT unlock_end_after_start
         CHECK (unlock_end > unlock_start)
     );
+
 
     
 CREATE OR REPLACE VIEW incrementalproxy.vw_domains_per_user AS 
@@ -138,6 +143,9 @@ CREATE OR REPLACE VIEW incrementalproxy.vw_domains_per_user AS
             ON dpu.id = un.fk_id_domains_per_user
     ;
 
+
+
+
 CREATE OR REPLACE VIEW incrementalproxy.vw_domain_unlocks AS 
     SELECT du.id
         ,  dpu.username
@@ -151,9 +159,12 @@ CREATE OR REPLACE VIEW incrementalproxy.vw_domain_unlocks AS
             ON dpu.id = du.fk_id_domains_per_user
     ;
 
+
+
 GRANT INSERT
     ON incrementalproxy.vw_domain_unlocks
     TO squid;
+
 
 
 CREATE OR REPLACE FUNCTION incrementalproxy.tgfun_insert_domain_for_user()
@@ -184,6 +195,7 @@ CREATE TRIGGER tg_on_insert_vw_domains_per_user
     EXECUTE PROCEDURE incrementalproxy.tgfun_insert_domain_for_user();
 
 
+
 CREATE OR REPLACE FUNCTION incrementalproxy.tgfun_update_domain_permission_per_user()
     RETURNS TRIGGER
     LANGUAGE plpgsql
@@ -201,6 +213,7 @@ CREATE TRIGGER tg_on_update_status_vw_domains_per_user
     ON incrementalproxy.vw_domains_per_user
     FOR EACH ROW
     EXECUTE PROCEDURE incrementalproxy.tgfun_update_domain_permission_per_user();
+
 
 
 CREATE OR REPLACE FUNCTION incrementalproxy.tgfun_insert_domain_unlock()
@@ -229,6 +242,7 @@ CREATE TRIGGER tg_on_insert_vw_domain_unlocks
     ON incrementalproxy.vw_domain_unlocks
     FOR EACH ROW
     EXECUTE PROCEDURE incrementalproxy.tgfun_insert_domain_unlock();
+
 
 
 CREATE OR REPLACE FUNCTION incrementalproxy.is_allowed_to_domain(par_username text, par_domain text)
@@ -267,6 +281,8 @@ CREATE OR REPLACE FUNCTION incrementalproxy.is_allowed_to_domain(par_username te
     END;
     $body$;
 
+
+
 GRANT EXECUTE
     ON FUNCTION incrementalproxy.is_allowed_to_domain(text, text)
     TO squid;
@@ -285,5 +301,6 @@ GRANT SELECT, INSERT, UPDATE, DELETE
     IN SCHEMA incrementalproxy
     TO squid_admin;
 
---ROLLBACK;
+
 COMMIT;
+
