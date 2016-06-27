@@ -2,7 +2,7 @@
 
 DROP DATABASE IF EXISTS squid;
 CREATE DATABASE squid
-    OWNER = matjaz
+    OWNER = mat
     ENCODING = 'UTF8'
     LC_COLLATE = 'it_IT.UTF-8'
     LC_CTYPE = 'it_IT.UTF-8'
