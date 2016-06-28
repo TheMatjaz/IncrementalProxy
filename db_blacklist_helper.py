@@ -131,26 +131,25 @@ class SquidInputParser(object):
         logging.debug("Creating SquidInputParser")
         self.requested_url = None
         self.username = None
-        self.client_ip = None
         self.request_method = None
+        self.referer = None
+        self.mimetype = None
         self.requested_domain = None
 
     def parse_squid_input_line(self, line):
         # Example input lines that Squid passes to the external redirector tool
-        # URL <Space> client_ip "/" fqdn <Space> user <Space> method [<Space> kvpairs]<NL>
-        #
-        # pintrest.com:443 140.105.225.106/- gustin CONNECT myip=172.31.24.53 myport=8080
-        # http://pintrest.com/ 140.105.225.106/- gustin GET myip=172.31.24.53 myport=8080
-        # ftp://pintrest.com/ 140.105.225.106/- gustin GET myip=172.31.24.53 myport=8080
-        # http://pintrest.com/index.html 140.105.225.106/- gustin GET myip=172.31.24.53 myport=8080
+        # URL username request_method referer\n
+        # http://matjaz.it/ gustin GET -\n
+        # http://matjaz.it/feed/ gustin GET http://matjaz.it/
         logging.debug("Parsing Squid input line")
         line_fields = line.strip().split(' ')
         self.requested_url = line_fields[0]
-        self.client_ip = line_fields[1].split('/')[0]
-        self.username = line_fields[2]
-        self.request_method = line_fields[3]
+        self.username = line_fields[1]
+        self.request_method = line_fields[2]
+        self.referer = line_fields[3]
+        self.mimetype = line_fields[4]
         self.requested_domain = self._extract_domain_from_url(self.requested_url)
-        logging.debug("Requested url: {:s} and domain: {:s}".format(self.requested_url, self.requested_domain))
+        logging.debug("Requested url: {:s} and domain: {:s}, referer: {:s}, mime type {:s}".format(self.requested_url, self.requested_domain, self.referer, self.mimetype))
         
     def _extract_domain_from_url(self, url):
         # Thanks to: http://stackoverflow.com/a/21564306/5292928
@@ -171,14 +170,17 @@ class SquidToThisScriptAdapter(object):
         self.squid_input_parser = SquidInputParser()
         self.redirection_url = redirection_url
 
-    def allow_user(self):
+    def allow_user(self, error=False):
         logging.debug("Flushing allowance to stdout")
-        stdout.write("\n")
+        if error:
+            stdout.write("ERR\n") # allows user but signals an error
+        else:
+            stdout.write("OK\n")
         stdout.flush()
 
     def redirect_user(self):
         logging.debug("Flushing redirection to stdout")
-        stdout.write(self.redirection_url + "\n")
+        stdout.write('OK status=307 url="' + self.redirection_url + '"\n')
         stdout.flush()
 
     def cycle_over_stdin_lines(self):
@@ -194,11 +196,15 @@ class SquidToThisScriptAdapter(object):
             self.squid_input_parser.parse_squid_input_line(line)
             if self.db_access_controller.open_db_connection_if_closed() == False:
                 logging.error("Allowing user to domain anyways")
-                self.allow_user() # in case of DB error, let user access any siteparse_squid_input_line(line)
+                self.allow_user(error=True) # in case of DB error, let user access any siteparse_squid_input_line(line)
                 continue
             if self.db_access_controller.prepare_statement_if_not_already() == False:
                 logging.error("Allowing user to domain anyways")
-                self.allow_user() # in case of DB error, let user access any siteparse_squid_input_line(line)
+                self.allow_user(error=True) # in case of DB error, let user access any siteparse_squid_input_line(line)
+                continue
+            if self.squid_input_parser.referer != '-' and self.squid_input_parser.mimetype != 'text/html':
+                # This is a resource or download of a page, so is allowed by default without logging in the DB
+                logging.info("Resource is allowed: {:s}".format(self.squid_input_parser.requested_url))
                 continue
             if self.db_access_controller.is_user_allowed_to_domain(self.squid_input_parser.username, self.squid_input_parser.requested_domain):
                 self.allow_user()
