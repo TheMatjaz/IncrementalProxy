@@ -14,6 +14,7 @@
     $parsed_url = parse_url($url);
     $domain = $parsed_url['host'];
 ?>
+<!DOCTYPE html>
 <html>
 <head>
 <title>IncrementalProxy</title>
