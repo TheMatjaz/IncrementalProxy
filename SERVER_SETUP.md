@@ -36,10 +36,9 @@ to
    local   all             all                                     md5
 
 
-
-"%<a %<A %un %>rm %{Referer}>h"
-
-server_ip server_domain username request_method_from_client referer
-
 # Test redirection with wget
 wget --delete-after -e use_proxy=yes -e http_proxy=localhost:18080 --proxy-user=gustin --proxy-password=pwgustin minecraft.matjaz.it
+
+# Apache, PHP
+sudo apt-get install apache2 php php-pgsql 
+sudo phpenmod pgsql
