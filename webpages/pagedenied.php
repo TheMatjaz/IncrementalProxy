@@ -94,8 +94,8 @@
 <p>Please insert your credentials.</p>
 <form action="/insertinlimbo.php" method="post">
     <div>
-        <label for="name">Username: </label>
-        <input type="text" id="name" name="user_name" value="<?php echo $username;?>"/>
+        <label for="username">Username: </label>
+        <input type="text" id="username" name="username" value="<?php echo $username;?>"/>
     </div>
     <div>
         <label for="password">Password: </label>
@@ -104,6 +104,7 @@
     <div>
         <label for="domain">Domain: </label>
         <input type="url" id="domain" name="domain" value="<?php echo $domain;?>"/>
+        <input type="hidden" id="url" name="url" value="<?php echo $url;?>" 
     </div>
     <div>
         <label for="motivation">Motivation: </label>
@@ -121,8 +122,8 @@
 <p>Please insert your credentials.</p>
 <form action="/unlock.php" method="post">
     <div>
-        <label for="name">Username: </label>
-        <input type="text" id="name" name="user_name" value="<?php echo $username;?>"/>
+        <label for="username">Username: </label>
+        <input type="text" id="username" name="username" value="<?php echo $username;?>"/>
     </div>
     <div>
         <label for="password">Password: </label>
@@ -131,10 +132,11 @@
     <div>
         <label for="domain">Domain: </label>
         <input type="url" id="domain" name="domain" value="<?php echo $domain;?>"/>
+        <input type="hidden" id="url" name="url" value="<?php echo $url;?>" 
     </div>
     <div>
         <label for="time">Unlock length: </label>
-        <input type="radio" name="unlocklength" value="1h" checked="checked"> 1 hour <input type="radio" name="unlocklength" value="1w"> 1 week <input type="radio" name="unlocklength" value="1y"> 1 year
+        <input type="radio" name="unlocklength" value="1 hour" checked="checked"> 1 hour <input type="radio" name="unlocklength" value="1 week"> 1 week <input type="radio" name="unlocklength" value="1 year"> 1 year
     </div>
     <div>
         <label for="motivation">Motivation: </label>
