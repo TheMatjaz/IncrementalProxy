@@ -1,7 +1,7 @@
 <?php
-    $url = "http://matjaz.it/"
-    $username = ""
-    $helpermessage = ""
+    $url = "http://matjaz.it/";
+    $username = "";
+    $helpermessage = "";
     if (isset($_GET['url'])) {
         $url = $_GET['url'];
     }
@@ -103,7 +103,7 @@
     </div>
     <div>
         <label for="domain">Domain: </label>
-        <input type="url" id="domain" name="domain" value="<?php echo $domain;?>/>
+        <input type="url" id="domain" name="domain" value="<?php echo $domain;?>"/>
     </div>
     <div>
         <label for="motivation">Motivation: </label>
@@ -130,13 +130,11 @@
     </div>
     <div>
         <label for="domain">Domain: </label>
-        <input type="url" id="domain" name="domain" value="<?php echo $domain;?>/>
+        <input type="url" id="domain" name="domain" value="<?php echo $domain;?>"/>
     </div>
     <div>
         <label for="time">Unlock length: </label>
-        <input type="radio" name="unlocklength" value="1h"> 1 hour<br>
-        <input type="radio" name="unlocklength" value="1w"> 1 week<br>
-        <input type="radio" name="unlocklength" value="1y"> 1 year
+        <input type="radio" name="unlocklength" value="1h" checked="checked"> 1 hour <input type="radio" name="unlocklength" value="1w"> 1 week <input type="radio" name="unlocklength" value="1y"> 1 year
     </div>
     <div>
         <label for="motivation">Motivation: </label>
