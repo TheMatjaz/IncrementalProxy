@@ -89,16 +89,6 @@ class DomainAccessControllerOnPostgreSql(object):
             logging.debug("Database connection already closed, skipping")
             return True
 
-    def add_domain_to_users_limbo(self, username, domain):
-        try:
-            logging.debug("Executing prepared INSERT statement for user {:s} and domain {:s}".format(username, domain))
-            execute_insert_statement_string = "EXECUTE insert_new_domain_for_user(%s, %s);"
-            self.insert_cursor.execute(execute_insert_statement_string, (username, domain))
-            return True
-        except:
-            logging.error("Unable to execute prepared INSERT statement")
-            return False
-
     def is_user_allowed_to_domain(self, username, domain):
         try:
             logging.debug("Executing prepared SELECT statement for user {:s} and domain {:s}".format(username, domain))
@@ -114,16 +104,14 @@ class DomainAccessControllerOnPostgreSql(object):
             logging.error("Fetched row is empty for unknown reasons")
         else:
             response = row[0]
+            if response == None or response == '':
+                response = 'error'
             if response == 'allowed' or response == 'limbo' or response == 'unlocked' or response == 'error':
                 logging.info("User {:s} is allowed to domain {:s}. Reason: {:s}".format(username, domain, response))
-                return True
-            elif response == 'first':
-                logging.info("User {:s} is allowed to domain {:s}. Reason: {:s}".format(username, domain, response))
-                # First time visit of this website for this user
-                return self.add_domain_to_users_limbo(username, domain)
+                return True, response
             else:
                 logging.info("User {:s} is NOT allowed to domain {:s}. Reason: {:s}".format(username, domain, response))
-                return False
+                return False, response
 
 
 class SquidInputParser(object):
@@ -131,25 +119,25 @@ class SquidInputParser(object):
         logging.debug("Creating SquidInputParser")
         self.requested_url = None
         self.username = None
-        self.request_method = None
         self.referer = None
         self.mimetype = None
         self.requested_domain = None
+        self.mimetype_is_html = None
 
     def parse_squid_input_line(self, line):
         # Example input lines that Squid passes to the external redirector tool
         # URL username request_method referer\n
-        # http://matjaz.it/ gustin GET -\n
-        # http://matjaz.it/feed/ gustin GET http://matjaz.it/
+        # http://matjaz.it/ gustin - text/html;%20encoding=utf-8\n
+        # http://matjaz.it/style.css gustin http://matjaz.it/ text/css
         logging.debug("Parsing Squid input line")
         line_fields = line.strip().split(' ')
         self.requested_url = line_fields[0]
         self.username = line_fields[1]
-        self.request_method = line_fields[2]
-        self.referer = line_fields[3]
-        self.mimetype = line_fields[4]
+        self.referer = line_fields[2]
+        self.mimetype = line_fields[3]
         self.requested_domain = self._extract_domain_from_url(self.requested_url)
         logging.debug("Requested url: {:s} and domain: {:s}, referer: {:s}, mime type {:s}".format(self.requested_url, self.requested_domain, self.referer, self.mimetype))
+        self.mimetype_is_html = (self.mimetype.lower().find('html') >= 0)
         
     def _extract_domain_from_url(self, url):
         # Thanks to: http://stackoverflow.com/a/21564306/5292928
@@ -164,23 +152,19 @@ class SquidInputParser(object):
     
 
 class SquidToThisScriptAdapter(object):
-    def __init__(self, db_access_controller, redirection_url):
+    def __init__(self, db_access_controller):
         logging.debug("Creating SquidToThisScriptAdapter")
         self.db_access_controller = db_access_controller
         self.squid_input_parser = SquidInputParser()
-        self.redirection_url = redirection_url
 
-    def allow_user(self, error=False):
+    def allow_user(self, reason):
         logging.debug("Flushing allowance to stdout")
-        if error:
-            stdout.write("ERR\n") # allows user but signals an error
-        else:
-            stdout.write("OK\n")
+        stdout.write('OK message="' + reason + '"\n')
         stdout.flush()
 
-    def redirect_user(self):
+    def redirect_user(self, reason):
         logging.debug("Flushing redirection to stdout")
-        stdout.write('OK status=307 url="' + self.redirection_url + '"\n')
+        stdout.write('ERR message="'+ reason +'"\n')
         stdout.flush()
 
     def cycle_over_stdin_lines(self):
@@ -196,20 +180,22 @@ class SquidToThisScriptAdapter(object):
             self.squid_input_parser.parse_squid_input_line(line)
             if self.db_access_controller.open_db_connection_if_closed() == False:
                 logging.error("Allowing user to domain anyways")
-                self.allow_user(error=True) # in case of DB error, let user access any siteparse_squid_input_line(line)
+                self.allow_user(reason="error") # in case of DB error, let user access any siteparse_squid_input_line(line)
                 continue
             if self.db_access_controller.prepare_statement_if_not_already() == False:
                 logging.error("Allowing user to domain anyways")
-                self.allow_user(error=True) # in case of DB error, let user access any siteparse_squid_input_line(line)
+                self.allow_user(reason="error") # in case of DB error, let user access any siteparse_squid_input_line(line)
                 continue
-            if self.squid_input_parser.referer != '-' and self.squid_input_parser.mimetype != 'text/html':
+            if self.squid_input_parser.referer != '-' and not self.squid_input_parser.mimetype_is_html:
                 # This is a resource or download of a page, so is allowed by default without logging in the DB
                 logging.info("Resource is allowed: {:s}".format(self.squid_input_parser.requested_url))
+                self.allow_user(reason="resource")
                 continue
-            if self.db_access_controller.is_user_allowed_to_domain(self.squid_input_parser.username, self.squid_input_parser.requested_domain):
-                self.allow_user()
+            is_allowed, reason = self.db_access_controller.is_user_allowed_to_domain(self.squid_input_parser.username, self.squid_input_parser.requested_domain)
+            if is_allowed:
+                self.allow_user(reason)
             else:
-                self.redirect_user()
+                self.redirect_user(reason)
         self.db_access_controller.close_db_connection_if_open()
                 
 
@@ -243,9 +229,6 @@ is allowed to access a certain domain or not"""
     parser.add_argument("--col-status",
                         default = "status",
                         help = "Name of the column with the status of a domain per user in the table")
-    parser.add_argument("--redirection-url",
-                        default = "http://proxy.matjaz.it/",
-                        help = "URL where to redirect a user when accessing a denied domain")
     parser.add_argument("--loglevel",
                         default = "INFO",
                         help = "Details being logged. Levels are DEBUG, INFO, WARNING, ERROR")
@@ -284,7 +267,7 @@ def main():
     setup_logging(args)
     prepared_select_statement, prepared_insert_statement = prepare_sql_statements(args)
     db_access_controller = DomainAccessControllerOnPostgreSql(args.db_host, args.db_name, args.db_user, args.db_password, prepared_select_statement, prepared_insert_statement)
-    squid_db_adapter = SquidToThisScriptAdapter(db_access_controller, args.redirection_url)
+    squid_db_adapter = SquidToThisScriptAdapter(db_access_controller)
     squid_db_adapter.cycle_over_stdin_lines()
 
 if __name__ == "__main__":
