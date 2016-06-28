@@ -21,7 +21,7 @@ def extract_domain_from_url(url):
 def extract_fields_from_line(line):
     # The line is formatted as "URL username"
     # Example: "https://www.facebook.com/index.html?var=2 johndoe"
-    url, username, request, referer, mimetype = line.strip().split(' ', 4)
+    url, username, referer, mimetype = line.strip().split(' ', 3)
     return url, username, referer, mimetype
 
 logfile = open("/tmp/squidhelper.log", 'a')
@@ -39,8 +39,8 @@ while True:
         stdout.write('OK\n')
     else:
         if domain.find("f") >= 0:
-            logfile.write("RESP> Has an F in domain, redirected\n")
-            stdout.write('OK status=307 url="http://localhost:20080/"\n')
+            logfile.write("RESP> Has an F in domain, not allowed\n")
+            stdout.write('ERR\n')
         else:
             logfile.write("RESP> No problems, allowed\n")
             stdout.write("OK\n")
