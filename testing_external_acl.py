@@ -21,8 +21,8 @@ def extract_domain_from_url(url):
 def extract_fields_from_line(line):
     # The line is formatted as "URL username"
     # Example: "https://www.facebook.com/index.html?var=2 johndoe"
-    url, username, request, referer = line.strip().split(' ', 3)
-    return url, username, referer
+    url, username, request, referer, mimetype = line.strip().split(' ', 4)
+    return url, username, referer, mimetype
 
 logfile = open("/tmp/squidhelper.log", 'a')
 
@@ -31,14 +31,20 @@ while True:
     if not line:
         # EOF
         break
-    logfile.write("LINE> " + line)
-    domain, username, referer = extract_fields_from_line(line)
-    logfile.write("RSLT> " + str(datetime.datetime.now()) + ", Domain: " + domain + ", Username: " + username + ", Referer: " + referer + "\n")
-    logfile.flush()
-    if domain.find("f") >=0 and referer == "-":
-        stdout.write('OK status=307 url="http://localhost:20080/"\n')
+    logfile.write("RQST> " + line)
+    domain, username, referer, mimetype = extract_fields_from_line(line)
+    logfile.write("DATA> " + str(datetime.datetime.now()) + ", Domain: " + domain + ", Username: " + username + ", Referer: " + referer + ", Mimetype: " + mimetype + "\n")
+    if referer != '-' and mimetype != 'text/html':
+        logfile.write("RESP> Resource, passes\n")
+        stdout.write('OK\n')
     else:
-        stdout.write("OK\n")
+        if domain.find("f") >= 0:
+            logfile.write("RESP> Has an F in domain, redirected\n")
+            stdout.write('OK status=307 url="http://localhost:20080/"\n')
+        else:
+            logfile.write("RESP> No problems, allowed\n")
+            stdout.write("OK\n")
     stdout.flush()
+    logfile.flush()
 
 logfile.close()
