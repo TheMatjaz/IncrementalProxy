@@ -34,7 +34,8 @@ while True:
     logfile.write("RQST> " + line)
     domain, username, referer, mimetype = extract_fields_from_line(line)
     logfile.write("DATA> " + str(datetime.datetime.now()) + ", Domain: " + domain + ", Username: " + username + ", Referer: " + referer + ", Mimetype: " + mimetype + "\n")
-    if referer != '-' and mimetype != 'text/html':
+    is_html = (mimetype.find('text/html') >= 0)
+    if referer != '-' and not is_html:
         logfile.write("RESP> Resource, passes\n")
         stdout.write('OK\n')
     else:
