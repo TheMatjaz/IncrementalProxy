@@ -90,6 +90,8 @@ class DomainAccessControllerOnPostgreSql(object):
             return True
 
     def is_user_allowed_to_domain(self, username, domain):
+        if domain == 'proxy.matjaz.it':
+            return True, "proxy.matjaz.it is always allowed"
         try:
             logging.debug("Executing prepared SELECT statement for user {:s} and domain {:s}".format(username, domain))
             execute_select_statement_string = "EXECUTE is_allowed (%s, %s);"
