@@ -21,6 +21,15 @@ CREATE OR REPLACE FUNCTION incrementalproxy.is_empty(string text)
         SELECT string ~ '^[[:space:]]*$';
     $body$;
 
+CREATE OR REPLACE FUNCTION incrementalproxy.strip_www(domain text)
+    RETURNS text
+    RETURNS NULL ON NULL INPUT
+    IMMUTABLE
+    LANGUAGE sql
+    AS $body$
+        SELECT trim(leading 'www.' FROM domain);
+    $body$;
+
 
 DROP TABLE IF EXISTS incrementalproxy.users CASCADE;
 CREATE TABLE incrementalproxy.users (
@@ -88,6 +97,7 @@ CREATE TABLE incrementalproxy.domains_per_user (
   , fk_id_user   smallint           NOT NULL
   , fk_id_domain integer            NOT NULL
   , status       incrementalproxy.enum_domain_status NOT NULL DEFAULT 'limbo'
+  , reason       text
 
   , PRIMARY KEY (id)
   , FOREIGN KEY (fk_id_user)
@@ -128,6 +138,7 @@ CREATE OR REPLACE VIEW incrementalproxy.vw_domains_per_user AS
         ,  u.username
         ,  d.domain
         ,  dpu.status
+        ,  dpu.reason
         ,  un.unlock_end
         FROM incrementalproxy.domains_per_user AS dpu
         INNER JOIN incrementalproxy.users AS u
@@ -175,13 +186,14 @@ CREATE OR REPLACE FUNCTION incrementalproxy.tgfun_insert_domain_for_user()
     BEGIN
         INSERT INTO incrementalproxy.domains
             (domain, a_priori_status) VALUES
-            (NEW.domain, DEFAULT)
+            (incrementalproxy.strip_www(NEW.domain), DEFAULT)
             ON CONFLICT DO NOTHING
             ;
-        INSERT INTO incrementalproxy.domains_per_user (fk_id_user, fk_id_domain, status) VALUES
+        INSERT INTO incrementalproxy.domains_per_user (fk_id_user, fk_id_domain, status, reason) VALUES
             ((SELECT id FROM incrementalproxy.users WHERE username = NEW.username)
-              , (SELECT id FROM incrementalproxy.domains WHERE domain = NEW.domain)
-              , NEW.status)
+              , (SELECT id FROM incrementalproxy.domains WHERE domain = incrementalproxy.strip_www(NEW.domain))
+              , NEW.status
+              , NEW.reason)
             ON CONFLICT DO NOTHING
             ;
         RETURN NEW;
@@ -224,11 +236,11 @@ CREATE OR REPLACE FUNCTION incrementalproxy.tgfun_insert_domain_unlock()
     BEGIN
         INSERT INTO incrementalproxy.vw_domains_per_user
             (username, domain, status) VALUES
-            (NEW.username, NEW.domain, 'denied')
+            (NEW.username, incrementalproxy.strip_www(NEW.domain), 'denied')
             ON CONFLICT DO NOTHING
             ;
         INSERT INTO incrementalproxy.domain_unlocks (fk_id_domains_per_user, reason, unlock_end) VALUES
-            ((SELECT id FROM incrementalproxy.vw_domains_per_user WHERE username = NEW.username AND domain = NEW.domain)
+            ((SELECT id FROM incrementalproxy.vw_domains_per_user WHERE username = NEW.username AND domain = incrementalproxy.strip_www(NEW.domain))
               , NEW.reason
               , NEW.unlock_end)
             ON CONFLICT DO NOTHING
@@ -258,7 +270,7 @@ CREATE OR REPLACE FUNCTION incrementalproxy.is_allowed_to_domain(par_username te
         INTO var_status, var_unlock_end
         FROM incrementalproxy.vw_domains_per_user
         WHERE username = par_username
-            AND domain = par_domain;
+            AND domain = incrementalproxy.strip_www(par_domain);
         IF var_status = 'banned' THEN
             RETURN 'banned';
         ELSIF var_status = 'denied' AND var_unlock_end IS NULL THEN
