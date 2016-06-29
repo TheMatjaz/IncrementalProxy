@@ -15,8 +15,9 @@
     $domain = $parsed_url['host'];
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
 <head>
+<meta charset="utf-8"/>
 <title>IncrementalProxy</title>
 </head>
 <body>

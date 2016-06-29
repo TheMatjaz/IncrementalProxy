@@ -32,8 +32,9 @@ if (!$authenticated) {
 }
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
 <head>
+<meta charset="utf-8"/>
 <title>IncrementalProxy</title>
 <?php echo $response; ?>
 </body>
