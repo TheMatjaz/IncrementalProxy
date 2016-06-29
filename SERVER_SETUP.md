@@ -42,3 +42,6 @@ wget --delete-after -e use_proxy=yes -e http_proxy=localhost:18080 --proxy-user=
 # Apache, PHP
 sudo apt-get install apache2 php php-pgsql 
 sudo phpenmod pgsql
+
+Follow this whole tutorial: https://www.digitalocean.com/community/tutorials/how-to-set-up-apache-virtual-hosts-on-ubuntu-14-04-lts
+sudo ln /home/ubuntu/Development/IncrementalProxy/webpages/* /var/www/proxy.matjaz.it/public_html/

@@ -103,7 +103,7 @@
     </div>
     <div>
         <label for="domain">Domain: </label>
-        <input type="url" id="domain" name="domain" value="<?php echo $domain;?>"/>
+        <input type="text" id="domain" name="domain" value="<?php echo $domain;?>"/>
         <input type="hidden" id="url" name="url" value="<?php echo $url;?>" 
     </div>
     <div>
@@ -131,7 +131,7 @@
     </div>
     <div>
         <label for="domain">Domain: </label>
-        <input type="url" id="domain" name="domain" value="<?php echo $domain;?>"/>
+        <input type="text" id="domain" name="domain" value="<?php echo $domain;?>"/>
         <input type="hidden" id="url" name="url" value="<?php echo $url;?>" 
     </div>
     <div>
