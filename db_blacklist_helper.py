@@ -90,8 +90,6 @@ class DomainAccessControllerOnPostgreSql(object):
             return True
 
     def is_user_allowed_to_domain(self, username, domain):
-        if domain == 'proxy.matjaz.it':
-            return True, "proxy.matjaz.it is always allowed"
         try:
             logging.debug("Executing prepared SELECT statement for user {:s} and domain {:s}".format(username, domain))
             execute_select_statement_string = "EXECUTE is_allowed (%s, %s);"
@@ -180,12 +178,16 @@ class SquidToThisScriptAdapter(object):
                 logging.warning("EOF on stdin. Terminating.")
                 break
             self.squid_input_parser.parse_squid_input_line(line)
+            if self.squid_input_parser.requested_domain == 'proxy.matjaz.it':
+                logging.debug("Domain proxy.matjaz.it is allowed by default")
+                self.allow_user(reason="allowed")
+                continue
             if self.db_access_controller.open_db_connection_if_closed() == False:
-                logging.error("Allowing user to domain anyways")
+                logging.error("Database connection closed: allowing user to domain anyways")
                 self.allow_user(reason="error") # in case of DB error, let user access any siteparse_squid_input_line(line)
                 continue
             if self.db_access_controller.prepare_statement_if_not_already() == False:
-                logging.error("Allowing user to domain anyways")
+                logging.error("Statement not ready: allowing user to domain anyways")
                 self.allow_user(reason="error") # in case of DB error, let user access any siteparse_squid_input_line(line)
                 continue
             if self.squid_input_parser.referer != '-' and not self.squid_input_parser.mimetype_is_html:
