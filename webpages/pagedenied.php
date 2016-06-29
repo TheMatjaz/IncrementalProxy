@@ -1,7 +1,7 @@
 <?php
     $url = "http://matjaz.it/";
     $username = "";
-    $helpermessage = "";
+    $helpermessage = "first";
     if (isset($_GET['url'])) {
         $url = $_GET['url'];
     }
@@ -92,7 +92,7 @@
 <p>You are visiting this domain for the first time. Please insert your credentials and motivate your visit. You will be allowed to access this domain for now.</p>
 <p>Be aware that, if your motivation is not good, you will be banned from this domain forever.</p>
 <p>Please insert your credentials.</p>
-<form action="/insertinlimbo.php" method="post">
+<form action="insertinlimbo.php" method="post">
     <div>
         <label for="username">Username: </label>
         <input type="text" id="username" name="username" value="<?php echo $username;?>"/>
@@ -120,7 +120,7 @@
 <p>If you need to visit it for a specified period of time, please fill out this form.</p>
 <p>Be aware that, if your motivation is not good, you will be banned from this domain forever.</p>
 <p>Please insert your credentials.</p>
-<form action="/unlock.php" method="post">
+<form action="unlock.php" method="post">
     <div>
         <label for="username">Username: </label>
         <input type="text" id="username" name="username" value="<?php echo $username;?>"/>
