@@ -1,4 +1,6 @@
 <?php
+ini_set('display_errors', 'On');
+error_reporting(E_ALL);
 // Fetch POST parameters
 $username = pg_escape_string(trim($_POST['username']));
 $password = pg_escape_string(trim($_POST['password']));
