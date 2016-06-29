@@ -117,7 +117,7 @@ error_reporting(E_ALL);
         <button type="submit">Send</button>
     </div>
 </form>
-<?php } elseif ($helpermessage == 'denied') { ?>
+<?php } elseif ($helpermessage == 'denied' || $helpermessage == 'expired') { ?>
 <h2>The domain is blocked</h2>
 <p>This domain has been blocked by the proxy administrator.</p>
 <p>If you need to visit it for a specified period of time, please fill out this form.</p>
