@@ -104,7 +104,7 @@
     <div>
         <label for="domain">Domain: </label>
         <input type="text" id="domain" name="domain" value="<?php echo $domain;?>"/>
-        <input type="hidden" id="url" name="url" value="<?php echo $url;?>" 
+        <input type="hidden" id="url" name="url" value="<?php echo $url;?>" />
     </div>
     <div>
         <label for="motivation">Motivation: </label>
@@ -132,7 +132,7 @@
     <div>
         <label for="domain">Domain: </label>
         <input type="text" id="domain" name="domain" value="<?php echo $domain;?>"/>
-        <input type="hidden" id="url" name="url" value="<?php echo $url;?>" 
+        <input type="hidden" id="url" name="url" value="<?php echo $url;?>" />
     </div>
     <div>
         <label for="time">Unlock length: </label>
