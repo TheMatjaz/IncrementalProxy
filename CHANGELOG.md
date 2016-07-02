@@ -4,6 +4,29 @@ Change Log
 All notable changes to the _IncrementalProxy_ project will be documented in this
 file. This project adheres to [Semantic Versioning](http://semver.org/).
 
+
+[0.3.0] - 2016-07-02
+--------------------
+
+### Added
+
+- SSL Bump: HTTPS connections are now decripted in a man-in-the-middle style
+  and the traffic is analyzed in clear text. **You'll have to install the
+  [proxy's self-signed certificate](proxy.matjaz.it/squid.pem)** in order to
+  navigate on websites over HTTPS.
+- Proxy administration web panel: it features the moderation of all domains
+  with status `limbo` and the listing of all domains visited by all users.
+  Only proxy administrators have access to it.
+
+
+### Changed
+
+- CSS look and feel of the web pages and panel. A very simple change with some
+  design fixes.
+- Add information in the Readme: about the generation of the proxy's 
+  self-signed certificate, about the SSL bump and the proxy admin web panel.
+
+
 [0.2.0] - 2016-07-01
 --------------------
 
