@@ -65,7 +65,7 @@ error_reporting(E_ALL);
         border-color: #000;
     
     }
-    input[type='checkbox'] {
+    input[type='radio'] {
         width: 10px;
     }
     textarea {
