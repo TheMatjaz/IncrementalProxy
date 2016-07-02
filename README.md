@@ -25,10 +25,16 @@ company online, the manufacturing deparment can not) and users may activate an
 unlock of any unknown domain (blocked by default in whitelist style) by writing
 a motivational paragraph for their request on a web panel. Upon request the 
 domain is unlocked for the specified period of time automatically. Periodically
-the proxy admin will check the request list and permanently ban domains with unserious requests for that particular user.
+the proxy admin will check the request list and permanently ban domains with 
+unserious requests for that particular user.
 
 Any resourse of any web page, like images, CSS, Javascript and so on is 
 automatically allowed without requesting the user anything.
+
+IncrementalProxy performs the decryption of any HTTPS traffic to be able to
+filter it. **You'll have to install the 
+[proxy's self-signed certificate](proxy.matjaz.it/squid.pem)** as a CA 
+certificate in your browser in order to navigate on websites over HTTPS.
 
 
 Domain statuses
@@ -50,9 +56,13 @@ Each domain is stored with a status for the current proxy user:
 Web panel
 ---------
 
-The web panel of the proxy offers an form to set a domain into limbo and a form
-to temporary unlock a domain. After the unlock the user is automatically 
-redirected to the desired URL.
+The web panel for users of the proxy offers a form to set a domain into limbo 
+and a form to temporary unlock a domain. After the unlock the user is 
+automatically redirected to the desired URL.
+
+The web panel for administrators of the proxy offers a form where it's possible
+to moderate any domain in status limbo and list all domains visited by all 
+users.
 
 
 Contact
@@ -134,9 +144,20 @@ sudo apt-get update
 sudo apt-get install libecap3 squid=3.5.19-1
 
 # Create a symbolic link from the Squid configuration file to the one from
-# This repository
+# this repository
 sudo rm /etc/squid3/squid.conf
 sudo ln -s /home/mat/Development/IncrementalProxy /etc/squid3/squid.conf
+
+# Generate the self-signed keypair for HTTPS decryption (SSL bump)
+openssl req -newkey rsa:4096 -sha256 -x509 -keyout /home/ubuntu/Development/IncrementalProxy/ssl_cert/squid.privatekey -out /home/ubuntu/Development/IncrementalProxy/ssl_cert/squid.pem -days 365 -nodes
+
+# Fix the permissions of the certificate
+sudo chown proxy:proxy /home/ubuntu/Development/IncrementalProxy/ssl_cert/*
+sudo chmod 400 /home/ubuntu/Development/IncrementalProxy/ssl_cert/*
+
+# Copy it into the in the Apache public www folder. Fix the command accordingly
+# to your machine's domain name.
+sudo cp /home/ubuntu/Development/IncrementalProxy/ssl_cert/squid.pem /var/www/your.domain.name.com/public_html/
 
 # Reload Squid's configuration
 sudo squid -k reconfigure
@@ -147,4 +168,5 @@ sudo service apache2 restart
 wget --delete-after -e use_proxy=yes -e http_proxy=localhost:8080 --proxy-user=someusername --proxy-password=somepassword someurltotest.com
 
 # Rembember to open the port 8080 in the firewall!
+
 ```
