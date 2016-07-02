@@ -1,8 +1,13 @@
 <?php
 ini_set('display_errors', 'On');
 error_reporting(E_ALL);
+if (isset($_POST['username']) && isset($_POST['password'])) {
     $username = pg_escape_string(trim($_POST['username']));
     $password = pg_escape_string(trim($_POST['password']));
+} else {
+    $username = '';
+    $password = '';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en-us">
@@ -53,6 +58,9 @@ error_reporting(E_ALL);
         border-color: #000;
     
     }
+    input[type='checkbox'] {
+        width: 10px;
+    }
     textarea {
         /* To properly align multiline text fields with their labels */
         vertical-align: top;
@@ -75,6 +83,9 @@ error_reporting(E_ALL);
            between the labels and their text fields */
         margin-left: .5em;
     
+    }
+    .input checkbox {
+        width: 10px;
     }
 </style>
 <?php
@@ -114,10 +125,11 @@ error_reporting(E_ALL);
             $success = $statement->execute();
             // Print the list of users
             echo "<h2>Choose users to admin</h2>
+            <p>If you select none, the current status of all users and their domains will be listed.</p>
             <form action=\"admin_domains.php\" method=\"post\"><ul>";
             if ($success) {
-                while ($statement->rowCount() > 0) {
-                    $user = $statement->fetch(PDO::FETCH_COLUMN, 0);
+                $users = $statement->fetchAll(PDO::FETCH_COLUMN, 0);
+                foreach ($users as $user) {
                     echo "<li><input type='checkbox' name='users[]' value='" . $user . "'> " . $user . "</li>";
                 }
                 echo "</ul><div class=\"button\"><button type=\"submit\">Submit</button></div></form</body></html>";
