@@ -65,6 +65,9 @@ error_reporting(E_ALL);
         border-color: #000;
     
     }
+    input[type='radio'] {
+        width: 10px;
+    }
     textarea {
         /* To properly align multiline text fields with their labels */
         vertical-align: top;
