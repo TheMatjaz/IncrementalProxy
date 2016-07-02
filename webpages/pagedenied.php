@@ -27,9 +27,7 @@ error_reporting(E_ALL);
 <?php
     if ($helpermessage == 'first') { ?>
 <h2>Motivate your visit</h2>
-<p>You are visiting this domain for the first time. Please insert your credentials and motivate your visit. You will be allowed to access this domain for now.</p>
-<p>Be aware that, if your motivation is not good, you will be banned from this domain forever.</p>
-<p>Please insert your credentials.</p>
+<p>You are visiting this domain for the first time. Please insert your credentials and motivate your visit. You will be allowed to access this domain for now. Be aware that, if your motivation is not good, you will be banned from this domain forever.</p>
 <form action="insertinlimbo.php" method="post">
     <div>
         <label for="username">Username: </label>

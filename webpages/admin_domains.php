@@ -36,7 +36,7 @@ if ($users != '') {
         die();
     }
     echo "<h2>Choose domains to moderate</h2>
-        <form action='admin_domains_moderator.php' method='post'>
+        <form id='form-table' action='admin_domains_moderator.php' method='post'>
         <table>
         <tr><th>ALLOW/DENY/BAN</th><th>Id</th><th>Username</th><th>Domain</th><th>Reason</th></tr>";
     $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
