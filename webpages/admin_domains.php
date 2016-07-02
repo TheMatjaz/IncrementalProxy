@@ -3,17 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <title>IncrementalProxy</title>
-<style>
-table {
-    border-collapse: collapse;
-    width: 100%;
-}
-th, td {
-    text-align: left;
-    padding: 8px;
-}
-tr:nth-child(even){background-color: #f2f2f2}
-</style>
+<link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
 <?php
@@ -46,7 +36,7 @@ if ($users != '') {
         die();
     }
     echo "<h2>Choose domains to moderate</h2>
-        <form action='admin_domains_moderator.php' method='post'>
+        <form id='form-table' action='admin_domains_moderator.php' method='post'>
         <table>
         <tr><th>ALLOW/DENY/BAN</th><th>Id</th><th>Username</th><th>Domain</th><th>Reason</th></tr>";
     $rows = $statement->fetchAll(PDO::FETCH_ASSOC);

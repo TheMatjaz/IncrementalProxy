@@ -21,83 +21,13 @@ error_reporting(E_ALL);
 <head>
 <meta charset="utf-8"/>
 <title>IncrementalProxy</title>
+<link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
-<style>
-    /* Taken from https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/Forms/My_first_HTML_form */
-    form {
-        /* Just to center the form on the page */
-        margin: 0 auto;
-        width: 400px;
-        /* To see the outline of the form */
-        padding: 1em;
-        border: 1px solid #CCC;
-        border-radius: 1em;
-    
-    }
-    form div + div {
-        margin-top: 1em;
-    
-    }
-    label {
-        /* To make sure that all labels have the same size and are properly aligned */
-        display: inline-block;
-        width: 90px;
-        text-align: right;
-    
-    }
-    input, textarea {
-        /* To make sure that all text fields have the same font settings
-           By default, textareas have a monospace font */
-        font: 1em sans-serif;
-
-        /* To give the same size to all text field */
-        width: 300px;
-        -moz-box-sizing: border-box;
-        box-sizing: border-box;
-
-        /* To harmonize the look & feel of text field border */
-        border: 1px solid #999;
-    
-    }
-    input:focus, textarea:focus {
-        /* To give a little highlight on active elements */
-        border-color: #000;
-    
-    }
-    input[type='radio'] {
-        width: 10px;
-    }
-    textarea {
-        /* To properly align multiline text fields with their labels */
-        vertical-align: top;
-
-        /* To give enough room to type some text */
-        height: 5em;
-
-        /* To allow users to resize any textarea vertically
-           It does not work on all browsers */
-        resize: vertical;
-    
-    }
-    .button {
-        /* To position the buttons to the same position of the text fields */
-        padding-left: 90px; /* same size as the label elements */
-    
-    }
-    button {
-        /* This extra margin represent roughly the same space as the space
-           between the labels and their text fields */
-        margin-left: .5em;
-    
-    }
-</style>
 <?php
     if ($helpermessage == 'first') { ?>
 <h2>Motivate your visit</h2>
-<p>You are visiting this domain for the first time. Please insert your credentials and motivate your visit. You will be allowed to access this domain for now.</p>
-<p>Be aware that, if your motivation is not good, you will be banned from this domain forever.</p>
-<p>Please insert your credentials.</p>
+<p>You are visiting this domain for the first time. Please insert your credentials and motivate your visit. You will be allowed to access this domain for now. Be aware that, if your motivation is not good, you will be banned from this domain forever.</p>
 <form action="insertinlimbo.php" method="post">
     <div>
         <label for="username">Username: </label>
