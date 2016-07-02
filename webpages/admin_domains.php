@@ -40,9 +40,9 @@ $db_handle = new PDO('pgsql:dbname=squid;host=localhost', 'squid_admin', 'squida
 $statement = $db_handle->prepare(
     "SELECT id, username, domain, reason
     FROM incrementalproxy.vw_domains_per_user
-    WHERE username IN ('', " . implode(',', $users) . ")
-    ORDER BY username, domain
-    AND status = 'limbo';");
+    WHERE username IN ('" . implode("','", $users) . "')
+    AND status = 'limbo'
+    ORDER BY username, domain;");
 $success = $statement->execute();
 if (!$success) {
     echo "<h2>Database error</h2>
@@ -55,15 +55,17 @@ if (!$success) {
 <h2>Choose domains to moderate</h2>
 <form action="admin_domains_moderator.php" method="post">
 <table>
-<tr><th>ALLOW/DENY/BAN</th><th>Id</th><th>Username</th><th>Domain</th><th>Status</th><th>Unlocked</th><th>Domain</th><th>Reason</th></tr>"
+<tr><th>ALLOW/DENY/BAN</th><th>Id</th><th>Username</th><th>Domain</th><th>Reason</th></tr>
+
 <?php
-while ($statement->rowCount() > 0) {
-    $row = $statement->fetch(PDO::FETCH_ASSOC);
+$rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+foreach ($rows as $row) {
     echo "<tr><td>
         <input type='radio' name='moderation[" . $row['id'] . "]' value='allowed' checked='checked'>
         <input type='radio' name='moderation[" . $row['id'] . "]' value='denied'>
         <input type='radio' name='moderation[" . $row['id'] . "]' value='banned'>
         </td><td>"
+        . $row['id'] . "</td><td>"
         . $row['username'] . "</td><td>"
         . $row['domain'] . "</td><td>"
         . $row['reason'] . "</td></tr>";
