@@ -3,17 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <title>IncrementalProxy</title>
-<style>
-table {
-    border-collapse: collapse;
-    width: 100%;
-}
-th, td {
-    text-align: left;
-    padding: 8px;
-}
-tr:nth-child(even){background-color: #f2f2f2}
-</style>
+<link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
 <?php
