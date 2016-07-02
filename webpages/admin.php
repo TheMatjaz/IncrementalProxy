@@ -125,6 +125,7 @@ if (isset($_POST['username']) && isset($_POST['password'])) {
             $success = $statement->execute();
             // Print the list of users
             echo "<h2>Choose users to admin</h2>
+            <p>If you select none, the current status of all users and their domains will be listed.</p>
             <form action=\"admin_domains.php\" method=\"post\"><ul>";
             if ($success) {
                 $users = $statement->fetchAll(PDO::FETCH_COLUMN, 0);
