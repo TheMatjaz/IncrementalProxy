@@ -52,10 +52,7 @@ error_reporting(E_ALL);
 </form>
 <?php } elseif ($helpermessage == 'denied' || $helpermessage == 'expired') { ?>
 <h2>The domain is blocked</h2>
-<p>This domain has been blocked by the proxy administrator.</p>
-<p>If you need to visit it for a specified period of time, please fill out this form.</p>
-<p>Be aware that, if your motivation is not good, you will be banned from this domain forever.</p>
-<p>Please insert your credentials.</p>
+<p>This domain has been blocked by the proxy administrator. If you need to visit it for a specified period of time, please fill out this form. Be aware that, if your motivation is not good, you will be banned from this domain forever. Please insert your credentials.</p>
 <form action="unlock.php" method="post">
     <div>
         <label for="username">Username: </label>

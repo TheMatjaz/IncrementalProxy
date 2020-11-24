@@ -7,6 +7,19 @@ unlock of domains and gives more power to the users: they can unlock themselves
 the domains they want to visit - if they have a good reason for it.
 
 
+Disclaimer - **abandoned project**
+----------------------------------
+
+This was an academic project. It's just a proof-of-concept without
+automatic tests and **definitely not production ready**. Web development is
+not my area of expertise.
+
+I don't plan to update this project.
+You are free to take this as a reference design and reimplement it in
+a better, more reliable, properly tested way, maybe with a more modern
+backend framework.
+
+
 How it works
 ------------
 
@@ -22,19 +35,33 @@ lot of time to answer the e-mail requesting the unlock.
 IncrementalProxy solves this problem blocking domains on a per-user
 specification (e.g. the PR department can access social media to represent the
 company online, the manufacturing deparment can not) and users may activate an
-unlock of any unknown domain (blocked by default in whitelist style) by writing
-a motivational paragraph for their request on a web panel. Upon request the 
-domain is unlocked for the specified period of time automatically. Periodically
+unlock of any unknown domain (blocked by default in allow-list style) by 
+writing
+a motivational paragraph for their request on a web panel.
+
+![First visit form](pictures/domain_first_visit.png)
+
+Some domains may be pre-denied, like social media, so the user needs to
+motivate the visit anyway:
+
+![Motivate blocked domain](pictures/domain_blocked.png)
+
+Upon request the domain is "in limbo", thus unlocked for the specified period 
+of time automatically.
+
+![Domain unlocked but in limbo](pictures/domain_in_limbo.png)
+
+Periodically
 the proxy admin will check the request list and permanently ban domains with 
 unserious requests for that particular user.
+
+![Banned domain](pictures/domain_banned.png)
 
 Any resourse of any web page, like images, CSS, Javascript and so on is 
 automatically allowed without requesting the user anything.
 
-IncrementalProxy performs the decryption of any HTTPS traffic to be able to
-filter it. **You'll have to install the 
-[proxy's self-signed certificate](proxy.matjaz.it/squid.pem)** as a CA 
-certificate in your browser in order to navigate on websites over HTTPS.
+IncrementalProxy (as of now) performs the decryption of any HTTPS traffic to 
+be able to filter it.
 
 
 Domain statuses
@@ -64,6 +91,14 @@ The web panel for administrators of the proxy offers a form where it's possible
 to moderate any domain in status limbo and list all domains visited by all 
 users.
 
+![Admin login](pictures/admin_login.png)
+
+![Admin selects user to inspect](pictures/admin_select_user.png)
+
+![Admin moderates the visits](pictures/admin_moderation.png)
+
+![Admin lists all domain visits so far](pictures/admin_list_visits.png)
+
 
 Contact
 -------
@@ -77,7 +112,7 @@ Setup
 IncrementalProxy only works with Squid 3.5.x, previous versions do not have
 the necessary features.
 
-### System setup
+### System setup
 
 This tutorial is based on Ubuntu Server 14.04, please take the necessary steps
 to adapt it to your operative system.

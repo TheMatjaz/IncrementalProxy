@@ -64,7 +64,7 @@ button {
     margin-left: .5em;
 
 }
-body {
+body, table {
     font-family: "HelveticaNeue","Helvetica Neue",Helvetica,Arial,sans-serif;
     line-height: 1.3;
     font-weight: 400;
