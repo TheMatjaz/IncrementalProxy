@@ -7,6 +7,19 @@ unlock of domains and gives more power to the users: they can unlock themselves
 the domains they want to visit - if they have a good reason for it.
 
 
+Disclaimer - **abandoned project**
+----------------------------------
+
+This was an academic project. It's just a proof-of-concept without
+automatic tests and **definitely not production ready**. Web development is
+not my area of expertise.
+
+I don't plan to update this project.
+You are free to take this as a reference design and reimplement it in
+a better, more reliable, properly tested way, maybe with a more modern
+backend framework.
+
+
 How it works
 ------------
 
