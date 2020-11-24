@@ -4,6 +4,16 @@ Change Log
 All notable changes to the _IncrementalProxy_ project will be documented in this
 file. This project adheres to [Semantic Versioning](http://semver.org/).
 
+[0.3.1] - 2020-11-24
+--------------------
+
+### Fixed
+
+- Added BSD 3-Clause license: there was no license file before
+- Added screenshots to readme
+- Added disclaimer of project abandonment
+
+
 
 [0.3.0] - 2016-07-02
 --------------------
